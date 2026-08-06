@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block title %}Import w toku — {{ app_name }}{% endblock %}
+{% block heading %}Import{% endblock %}
+{% block subheading %}
+  <p class="text-sm text-ink-500">{{ job.filename }} · {{ job.created_at | datetime_pl }}</p>
+{% endblock %}
+
+{% block content %}
+{#
+  Postęp odświeżany przez HTMX co 2 sekundy. Serwer odsyła gotowy fragment HTML,
+  więc po stronie przeglądarki nie ma ani linijki JavaScriptu. Fragment sam nosi
+  atrybuty hx-* i sam przestaje o siebie prosić, gdy import się skończy.
+#}
+{% include 'imports/_status.html' %}
+{% endblock %}

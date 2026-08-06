@@ -1,0 +1,99 @@
+{% set finished = job.status.value in ('DONE', 'FAILED') %}
+{#
+  Dopóki import trwa, fragment sam prosi o kolejne odświeżenie. Po zakończeniu
+  atrybut hx-trigger znika — odpytywanie ustaje bez żadnego JS-a.
+#}
+<div id="import-status"
+     {% if not finished %}
+       hx-get="{{ url_for('imports.status', job_id=job.id) }}"
+       hx-trigger="every 2s"
+       hx-swap="outerHTML"
+     {% endif %}>
+
+  <div class="card mb-4">
+    <div class="card-body">
+
+      <div class="flex items-center justify-between mb-3">
+        <div class="section-title">
+          {{ import_status_labels.get(job.status, job.status.value) }}
+        </div>
+        <div class="text-sm text-ink-500">
+          {{ job.processed }} / {{ job.total or '—' }}
+        </div>
+      </div>
+
+      <div class="h-2 bg-ink-200 rounded overflow-hidden">
+        <div class="h-full bg-amber-500 transition-all duration-500"
+             style="width: {{ job.percent }}%"></div>
+      </div>
+
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
+        {% set stats = [
+          ('Dodano', job.created, 'text-ink-900'),
+          ('Zaktualizowano', job.updated, 'text-ink-900'),
+          ('Pominięto', job.skipped, 'text-ink-500'),
+          ('Do weryfikacji', job.flagged, 'text-warning' if job.flagged else 'text-ink-900')
+        ] %}
+        {% for label, value, tone in stats %}
+          <div>
+            <div class="text-[11px] uppercase tracking-section text-ink-500">{{ label }}</div>
+            <div class="text-xl font-semibold {{ tone }}">{{ value }}</div>
+          </div>
+        {% endfor %}
+      </div>
+
+    </div>
+  </div>
+
+  {% if job.status.value == 'FAILED' %}
+    <div class="flash-error mb-4">
+      <div>
+        <div class="font-medium mb-1">Import przerwany</div>
+        <div>{{ job.error }}</div>
+      </div>
+    </div>
+    <a href="{{ url_for('imports.index') }}" class="btn-secondary">Wróć do importu</a>
+  {% endif %}
+
+  {% if job.status.value == 'DONE' %}
+    <div class="flash-success mb-4">
+      Import zakończony{% if job.finished_at %} o {{ job.finished_at | datetime_pl('%H:%M') }}{% endif %}.
+    </div>
+
+    {% set problems = (job.report or {}).get('problems') or [] %}
+    {% if problems %}
+      <div class="card">
+        <div class="card-header">
+          <h2 class="section-title">Wiersze wymagające uwagi</h2>
+          <span class="text-xs text-ink-500">
+            {{ problems | length }} z {{ (job.report or {}).get('problems_total', problems | length) }}
+          </span>
+        </div>
+        <div class="overflow-x-auto max-h-96 overflow-y-auto">
+          <table class="table">
+            <thead>
+              <tr><th>Wiersz</th><th>Powód</th><th>Co zrobiono</th></tr>
+            </thead>
+            <tbody>
+              {% for problem in problems %}
+                <tr>
+                  <td class="text-ink-500">{{ problem.row }}</td>
+                  <td>{{ problem.reason }}</td>
+                  <td class="text-ink-500">{{ problem.action }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    {% endif %}
+
+    <div class="mt-4 flex gap-2">
+      <a href="{{ url_for('imports.index') }}" class="btn-secondary">Kolejny import</a>
+      {% if 'clients.index' in url_map_endpoints %}
+        <a href="{{ url_for('clients.index') }}" class="btn-primary">Przejdź do klientów</a>
+      {% endif %}
+    </div>
+  {% endif %}
+
+</div>

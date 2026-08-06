@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+{% block title %}Podgląd importu — {{ app_name }}{% endblock %}
+{% block heading %}Podgląd importu{% endblock %}
+{% block subheading %}
+  <p class="text-sm text-ink-500">{{ job.filename }}</p>
+{% endblock %}
+
+{% block actions %}
+  <a href="{{ url_for('imports.index') }}" class="btn-secondary">Anuluj</a>
+  <form method="post" action="{{ url_for('imports.start', job_id=job.id) }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token_value }}">
+    <button type="submit" class="btn-primary">
+      Zapisz {{ preview.total }} {{ plural_pl(preview.total, 'wiersz', 'wiersze', 'wierszy') }}
+    </button>
+  </form>
+{% endblock %}
+
+{% block content %}
+
+{# ----- Liczniki problemów, policzone na CAŁYM pliku ----- #}
+<div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2 mb-4">
+  {% set counters = [
+    ('Wierszy z danymi', preview.total, false),
+    ('Zaktualizuje istniejących', preview.existing_acronyms, false),
+    ('Bez telefonu', preview.rows_without_phone, preview.rows_without_phone > 0),
+    ('Telefonów nieparsowalnych', preview.bad_phones, preview.bad_phones > 0),
+    ('Błędnych NIP-ów', preview.bad_nips, preview.bad_nips > 0),
+    ('Błędnych kodów', preview.bad_postals, preview.bad_postals > 0),
+    ('Możliwych duplikatów', preview.possible_duplicates, preview.possible_duplicates > 0)
+  ] %}
+  {% for label, value, warn in counters %}
+    <div class="card">
+      <div class="p-3">
+        <div class="text-[11px] uppercase tracking-section text-ink-500 leading-tight mb-1">{{ label }}</div>
+        <div class="text-xl font-semibold {{ 'text-warning' if warn else 'text-ink-900' }}">{{ value }}</div>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+
+{% if preview.empty_rows or preview.duplicate_acronyms %}
+  <div class="space-y-2 mb-4">
+    {% if preview.empty_rows %}
+      <div class="flash-warning">
+        {{ preview.empty_rows }} {{ plural_pl(preview.empty_rows, 'pusty wiersz zostanie pominięty',
+           'puste wiersze zostaną pominięte', 'pustych wierszy zostanie pominiętych') }}.
+      </div>
+    {% endif %}
+    {% if preview.duplicate_acronyms %}
+      <div class="flash-warning">
+        Akronim powtarza się w pliku: {{ preview.duplicate_acronyms[:10] | join(', ') }}
+        {%- if preview.duplicate_acronyms | length > 10 %} i {{ preview.duplicate_acronyms | length - 10 }} więcej{% endif %}.
+        Wygra ostatni wiersz.
+      </div>
+    {% endif %}
+  </div>
+{% endif %}
+
+<div class="card mb-4">
+  <div class="card-header">
+    <h2 class="section-title">Rozpoznane kolumny</h2>
+  </div>
+  <div class="card-body flex flex-wrap gap-1.5">
+    {% for column in preview.columns %}
+      <span class="badge-soft">{{ column }}</span>
+    {% endfor %}
+    {% set known = ['Akronim','Miasto','Nip','Kod p.','Ulica','Telefon','Nazwa','E-mail'] %}
+    {% for label in preview.unmapped %}
+      {% if label not in known %}
+        <span class="badge-neutral" title="Kolumna pominięta">{{ label }} — pominięta</span>
+      {% endif %}
+    {% endfor %}
+  </div>
+</div>
+
+{# ----- Pierwsze 20 wierszy: oryginał obok wyniku ----- #}
+<div class="card">
+  <div class="card-header">
+    <h2 class="section-title">Pierwsze {{ preview.rows | length }} wierszy po normalizacji</h2>
+    <span class="text-xs text-ink-500">wartość zmieniona = wyróżniona</span>
+  </div>
+  <div class="overflow-x-auto">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Akronim</th>
+          <th>Nazwa</th>
+          <th>Miasto</th>
+          <th>Kod</th>
+          <th>NIP</th>
+          <th>Telefony</th>
+          <th>E-mail</th>
+          <th>Uwagi</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in preview.rows %}
+          {% if row.empty %}
+            <tr class="text-ink-500">
+              <td>{{ row.number }}</td>
+              <td colspan="8"><em>wiersz pusty — zostanie pominięty</em></td>
+            </tr>
+          {% else %}
+            <tr>
+              <td class="text-ink-500">{{ row.number }}</td>
+
+              <td class="font-medium">{{ row.values.acronym or '—' }}</td>
+
+              <td>
+                <div class="font-medium">{{ row.values.name or '—' }}</div>
+                {% if row.raw.name and row.raw.name != row.values.name %}
+                  <div class="text-xs text-ink-500">było: {{ row.raw.name }}</div>
+                {% endif %}
+              </td>
+
+              <td>
+                {{ row.values.city or '—' }}
+                {% if row.raw.city and row.raw.city != row.values.city %}
+                  <div class="text-xs text-ink-500">było: {{ row.raw.city }}</div>
+                {% endif %}
+              </td>
+
+              <td>
+                {% if row.values.postal_code %}
+                  {{ row.values.postal_code }}
+                {% elif row.raw.postal_code %}
+                  <span class="badge-warning">{{ row.raw.postal_code }}</span>
+                {% else %}—{% endif %}
+              </td>
+
+              <td>
+                {% if row.values.nip and row.nip_valid %}
+                  {{ row.values.nip | nip_pl }}
+                {% elif row.raw.nip %}
+                  <span class="badge-danger" title="Nie przechodzi walidacji">{{ row.raw.nip }}</span>
+                {% else %}—{% endif %}
+              </td>
+
+              <td>
+                {% if row.phones %}
+                  {% for phone in row.phones %}
+                    <div class="whitespace-nowrap">
+                      {% if phone.e164 %}
+                        {{ phone.e164 | phone_pl }}
+                        {% if phone.label %}<span class="text-xs text-ink-500">{{ phone.label }}</span>{% endif %}
+                      {% else %}
+                        <span class="badge-warning" title="{{ phone.warning }}">{{ phone.raw }}</span>
+                      {% endif %}
+                    </div>
+                  {% endfor %}
+                  {% if row.raw.phone and row.phones | length > 1 %}
+                    <div class="text-xs text-ink-500">z jednej komórki: {{ row.raw.phone }}</div>
+                  {% endif %}
+                {% else %}—{% endif %}
+              </td>
+
+              <td class="break-all">{{ row.values.email or '—' }}</td>
+
+              <td>
+                {% if row.warnings %}
+                  <ul class="text-xs text-warning space-y-0.5">
+                    {% for warning in row.warnings %}<li>{{ warning }}</li>{% endfor %}
+                  </ul>
+                {% else %}
+                  <span class="text-ink-500">—</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% endif %}
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

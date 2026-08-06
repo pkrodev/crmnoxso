@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% block title %}Import — {{ app_name }}{% endblock %}
+{% block heading %}Import bazy klientów{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+
+  <div class="lg:col-span-2 space-y-4">
+    <div class="card">
+      <div class="card-header">
+        <h2 class="section-title">Wgraj arkusz</h2>
+      </div>
+      <div class="card-body">
+        <form method="post" enctype="multipart/form-data" class="space-y-4">
+          {{ form.csrf_token }}
+
+          <div>
+            <label class="label" for="file">Plik .ods albo .xlsx</label>
+            {{ form.file(class_="input", id="file", accept=".ods,.xlsx,.xlsm") }}
+            {% for error in form.file.errors %}
+              <p class="field-error">{{ error }}</p>
+            {% endfor %}
+            <p class="text-xs text-ink-500 mt-1">
+              Maksymalnie 10 MB. Kolumny rozpoznawane po nagłówkach:
+              Akronim, Miasto, Nip, Kod p., Ulica, Telefon, Nazwa, E-mail.
+            </p>
+          </div>
+
+          <button type="submit" class="btn-primary">Wczytaj i pokaż podgląd</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h2 class="section-title">Jak to działa</h2>
+      </div>
+      <div class="card-body text-sm text-ink-700 space-y-2">
+        <p>
+          Po wgraniu pliku zobaczysz <strong>podgląd</strong>: pierwsze 20 wierszy
+          po normalizacji obok wartości oryginalnych, plus licznik problemów
+          z całego pliku. Nic nie trafia do bazy przed Twoim potwierdzeniem.
+        </p>
+        <p>
+          Klienci dopasowywani są po <strong>akronimie</strong> — istniejący rekord
+          zostaje zaktualizowany, nie zdublowany. Zbieżność NIP-u, telefonu lub nazwy
+          nie scala rekordów automatycznie, tylko oznacza je tagiem
+          <span class="badge-danger">możliwy-duplikat</span> do Twojej decyzji.
+        </p>
+        <p class="text-ink-900 font-medium">Import nigdy nie usuwa istniejących danych.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h2 class="section-title">Ostatnie importy</h2>
+    </div>
+    {% if recent %}
+      <table class="table">
+        <thead>
+          <tr><th>Plik</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          {% for job in recent %}
+            <tr>
+              <td>
+                <a class="link" href="{{ url_for('imports.progress', job_id=job.id) }}">{{ job.filename }}</a>
+                <div class="text-xs text-ink-500">{{ job.created_at | datetime_pl }}</div>
+              </td>
+              <td>
+                {% set tone = {'DONE': 'badge-success', 'FAILED': 'badge-danger',
+                               'RUNNING': 'badge-brand'}.get(job.status.value, 'badge-neutral') %}
+                <span class="{{ tone }}">{{ import_status_labels.get(job.status, job.status.value) }}</span>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <div class="card-body text-ink-500">Jeszcze nic nie importowano.</div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}
