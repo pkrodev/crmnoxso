@@ -1,0 +1,377 @@
+[
+  {
+    "file": "alembic-1.14.0-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/cb/06/8b505aea3d77021b18dcbd8133aa1418f1a1e37e432a465b14c46b2c0eaa/alembic-1.14.0-py3-none-any.whl",
+    "size": 233482
+  },
+  {
+    "file": "annotated_types-0.8.0-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/99/91/8acff4f5e50511b911bbccb72b8628a49c68ce14148cd9f6431094859a90/annotated_types-0.8.0-py3-none-any.whl",
+    "size": 13427
+  },
+  {
+    "file": "anyio-4.14.2-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/da/35/f2287558c17e29fafc8ef3daf819bb9834061cfa43bff8014f7df7f63bdc/anyio-4.14.2-py3-none-any.whl",
+    "size": 125813
+  },
+  {
+    "file": "APScheduler-3.11.0-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/d0/ae/9a053dd9229c0fde6b1f1f33f609ccff1ee79ddda364c756a924c6d8563b/APScheduler-3.11.0-py3-none-any.whl",
+    "size": 64004
+  },
+  {
+    "file": "bcrypt-4.2.1-cp37-abi3-win_amd64.whl",
+    "url": "https://files.pythonhosted.org/packages/00/8f/fe834eaa54abbd7cab8607e5020fa3a0557e929555b9e4ca404b4adaab06/bcrypt-4.2.1-cp37-abi3-win_amd64.whl",
+    "size": 152981
+  },
+  {
+    "file": "blinker-1.9.0-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/10/cb/f2ad4230dc2eb1a74edf38f1a38b9b52277f75bef262d8908e60d957e13c/blinker-1.9.0-py3-none-any.whl",
+    "size": 8458
+  },
+  {
+    "file": "certifi-2026.7.22-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/0b/a7/71ac2cff56fec219ed242bb11b8efb69fcc4bec75db06fb7bfe35de520e6/certifi-2026.7.22-py3-none-any.whl",
+    "size": 136983
+  },
+  {
+    "file": "charset_normalizer-3.4.1-cp313-cp313-win_amd64.whl",
+    "url": "https://files.pythonhosted.org/packages/27/f2/4f9a69cc7712b9b5ad8fdb87039fd89abba997ad5cbe690d1835d40405b0/charset_normalizer-3.4.1-cp313-cp313-win_amd64.whl",
+    "size": 102702
+  },
+  {
+    "file": "click-8.4.2-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/fb/e2/79c688af8b210d232694e31e59da9f6ec747bae31c3f5946e4e9b98860d5/click-8.4.2-py3-none-any.whl",
+    "size": 119243
+  },
+  {
+    "file": "colorama-0.4.6-py2.py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/d1/d6/3965ed04c63042e047cb6a3e6ed1a63a35087b6a609aa3a15ed8ac56c221/colorama-0.4.6-py2.py3-none-any.whl",
+    "size": 25335
+  },
+  {
+    "file": "coverage-7.15.3-cp313-cp313-win_amd64.whl",
+    "url": "https://files.pythonhosted.org/packages/1c/64/88f762ea80de2070207246faef514513be874486b2773528f2cc2b4b515c/coverage-7.15.3-cp313-cp313-win_amd64.whl",
+    "size": 225116
+  },
+  {
+    "file": "deprecated-1.3.1-py2.py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/84/d0/205d54408c08b13550c733c4b85429e7ead111c7f0014309637425520a9a/deprecated-1.3.1-py2.py3-none-any.whl",
+    "size": 11298
+  },
+  {
+    "file": "distro-1.9.0-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/12/b3/231ffd4ab1fc9d679809f356cebee130ac7daa00d6d6f3206dd4fd137e9e/distro-1.9.0-py3-none-any.whl",
+    "size": 20277
+  },
+  {
+    "file": "et_xmlfile-2.0.0-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/c1/8b/5fe2cc11fee489817272089c4203e679c63b570a5aaeb18d852ae3cbba6a/et_xmlfile-2.0.0-py3-none-any.whl",
+    "size": 18059
+  },
+  {
+    "file": "flask-3.1.0-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/af/47/93213ee66ef8fae3b93b3e29206f6b251e65c97bd91d8e1c5596ef15af0a/flask-3.1.0-py3-none-any.whl",
+    "size": 102979
+  },
+  {
+    "file": "Flask_Limiter-3.9.2-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/78/66/a6c16dd1b071cebe1c7aa45807a91fd5cf00822780ab8d02ccf32fff2611/Flask_Limiter-3.9.2-py3-none-any.whl",
+    "size": 28632
+  },
+  {
+    "file": "Flask_Login-0.6.3-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/59/f5/67e9cc5c2036f58115f9fe0f00d203cf6780c3ff8ae0e705e7a9d9e8ff9e/Flask_Login-0.6.3-py3-none-any.whl",
+    "size": 17303
+  },
+  {
+    "file": "Flask_Migrate-4.0.7-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/93/01/587023575286236f95d2ab8a826c320375ed5ea2102bb103ed89704ffa6b/Flask_Migrate-4.0.7-py3-none-any.whl",
+    "size": 21127
+  },
+  {
+    "file": "flask_sqlalchemy-3.1.1-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/1d/6a/89963a5c6ecf166e8be29e0d1bf6806051ee8fe6c82e232842e3aeac9204/flask_sqlalchemy-3.1.1-py3-none-any.whl",
+    "size": 25125
+  },
+  {
+    "file": "flask_wtf-1.2.2-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/dc/19/354449145fbebb65e7c621235b6ad69bebcfaec2142481f044d0ddc5b5c5/flask_wtf-1.2.2-py3-none-any.whl",
+    "size": 12779
+  },
+  {
+    "file": "gunicorn-23.0.0-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/cb/7d/6dac2a6e1eba33ee43f318edbed4ff29151a49b5d37f080aad1e6469bca4/gunicorn-23.0.0-py3-none-any.whl",
+    "size": 85029
+  },
+  {
+    "file": "h11-0.16.0-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/04/4b/29cac41a4d98d144bf5f6d33995617b185d14b22401f75ca86f384e87ff1/h11-0.16.0-py3-none-any.whl",
+    "size": 37515
+  },
+  {
+    "file": "httpcore-1.0.9-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/7e/f5/f66802a942d491edb555dd61e3a9961140fd64c90bce1eafd741609d334d/httpcore-1.0.9-py3-none-any.whl",
+    "size": 78784
+  },
+  {
+    "file": "httpx-0.28.1-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/2a/39/e50c7c3a983047577ee07d2a9e53faf5a69493943ec3f6a384bdc792deb2/httpx-0.28.1-py3-none-any.whl",
+    "size": 73517
+  },
+  {
+    "file": "idna-3.18-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/1e/5e/d4e9f1a599fb8e573b7b87160658329fbf28d19eac2718f51fc3def3aa5a/idna-3.18-py3-none-any.whl",
+    "size": 65455
+  },
+  {
+    "file": "iniconfig-2.3.0-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/cb/b1/3846dd7f199d53cb17f49cba7e651e9ce294d8497c8c150530ed11865bb8/iniconfig-2.3.0-py3-none-any.whl",
+    "size": 7484
+  },
+  {
+    "file": "itsdangerous-2.2.0-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/04/96/92447566d16df59b2a776c0fb82dbc4d9e07cd95062562af01e408583fc4/itsdangerous-2.2.0-py3-none-any.whl",
+    "size": 16234
+  },
+  {
+    "file": "jinja2-3.1.6-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/62/a1/3d680cbfd5f4b8f15abc1d571870c5fc3e594bb582bc3b64ea099db13e56/jinja2-3.1.6-py3-none-any.whl",
+    "size": 134899
+  },
+  {
+    "file": "jiter-0.16.0-cp313-cp313-win_amd64.whl",
+    "url": "https://files.pythonhosted.org/packages/88/6a/de61d04b9eec69c71719968d2f716532a3bc121170c44a39e14979c6be81/jiter-0.16.0-cp313-cp313-win_amd64.whl",
+    "size": 196160
+  },
+  {
+    "file": "limits-5.8.0-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/b9/98/cb5ca20618d205a09d5bec7591fbc4130369c7e6308d9a676a28ff3ab22c/limits-5.8.0-py3-none-any.whl",
+    "size": 60954
+  },
+  {
+    "file": "mako-1.4.1-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/a5/54/12ed58d458474aaab5c3d180173e745a4fe131bb330370596876d19ff60f/mako-1.4.1-py3-none-any.whl",
+    "size": 80010
+  },
+  {
+    "file": "markdown_it_py-4.2.0-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/b3/81/4da04ced5a082363ecfa159c010d200ecbd959ae410c10c0264a38cac0f5/markdown_it_py-4.2.0-py3-none-any.whl",
+    "size": 91687
+  },
+  {
+    "file": "markupsafe-3.0.3-cp313-cp313t-win_amd64.whl",
+    "url": "https://files.pythonhosted.org/packages/2b/98/e48a4bfba0a0ffcf9925fe2d69240bfaa19c6f7507b8cd09c70684a53c1e/markupsafe-3.0.3-cp313-cp313t-win_amd64.whl",
+    "size": 15200
+  },
+  {
+    "file": "mdurl-0.1.2-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/b3/38/89ba8ad64ae25be8de66a6d463314cf1eb366222074cfda9ee839c56a4b4/mdurl-0.1.2-py3-none-any.whl",
+    "size": 9979
+  },
+  {
+    "file": "mypy-1.14.1-cp313-cp313-win_amd64.whl",
+    "url": "https://files.pythonhosted.org/packages/54/da/3d6fc5d92d324701b0c23fb413c853892bfe0e1dbe06c9138037d459756b/mypy-1.14.1-cp313-cp313-win_amd64.whl",
+    "size": 9885276
+  },
+  {
+    "file": "mypy_extensions-1.1.0-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/79/7b/2c79738432f5c924bef5071f933bcc9efd0473bac3b4aa584a6f7c1c8df8/mypy_extensions-1.1.0-py3-none-any.whl",
+    "size": 4963
+  },
+  {
+    "file": "numpy-2.5.1-cp313-cp313-win_amd64.whl",
+    "url": "https://files.pythonhosted.org/packages/10/70/800b3fca480af32df9e8ea9f3d4a0c8feb4b32d7f195d174eabbda4829ad/numpy-2.5.1-cp313-cp313-win_amd64.whl",
+    "size": 12425674
+  },
+  {
+    "file": "odfpy-1.4.1.tar.gz",
+    "url": "https://files.pythonhosted.org/packages/97/73/8ade73f6749177003f7ce3304f524774adda96e6aaab30ea79fd8fda7934/odfpy-1.4.1.tar.gz",
+    "size": 717045
+  },
+  {
+    "file": "openai-1.59.3-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/c7/26/0e0fb582bcb2a7cb6802447a749a2fc938fe4b82324097abccb86abfd5d1/openai-1.59.3-py3-none-any.whl",
+    "size": 454793
+  },
+  {
+    "file": "openpyxl-3.1.5-py2.py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/c0/da/977ded879c29cbd04de313843e76868e6e13408a94ed6b987245dc7c8506/openpyxl-3.1.5-py2.py3-none-any.whl",
+    "size": 250910
+  },
+  {
+    "file": "ordered_set-4.1.0-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/33/55/af02708f230eb77084a299d7b08175cff006dea4f2721074b92cdb0296c0/ordered_set-4.1.0-py3-none-any.whl",
+    "size": 7634
+  },
+  {
+    "file": "packaging-26.3-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/63/34/ba1c580383c9eada3711951fef0795c80b829a078d72188184bcab9dd527/packaging-26.3-py3-none-any.whl",
+    "size": 129956
+  },
+  {
+    "file": "pandas-2.2.3-cp313-cp313-win_amd64.whl",
+    "url": "https://files.pythonhosted.org/packages/3b/bc/4b18e2b8c002572c5a441a64826252ce5da2aa738855747247a971988043/pandas-2.2.3-cp313-cp313-win_amd64.whl",
+    "size": 11481175
+  },
+  {
+    "file": "pandas_stubs-2.2.3.241126-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/6f/ab/ed42acf15bab2e86e5c49fad4aa038315233c4c2d22f41b49faa4d837516/pandas_stubs-2.2.3.241126-py3-none-any.whl",
+    "size": 158280
+  },
+  {
+    "file": "phonenumbers-8.13.52-py2.py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/b0/fa/ccc322224bbe27434f67d8fae917affcf6af4a6ef55f82f16ae87d9c784d/phonenumbers-8.13.52-py2.py3-none-any.whl",
+    "size": 2582018
+  },
+  {
+    "file": "pluggy-1.6.0-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/54/20/4d324d65cc6d9205fabedc306948156824eb9f0ee1633355a8f7ec5c66bf/pluggy-1.6.0-py3-none-any.whl",
+    "size": 20538
+  },
+  {
+    "file": "psycopg-3.2.3-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/ce/21/534b8f5bd9734b7a2fcd3a16b1ee82ef6cad81a4796e95ebf4e0c6a24119/psycopg-3.2.3-py3-none-any.whl",
+    "size": 197934
+  },
+  {
+    "file": "psycopg_binary-3.2.3-cp313-cp313-win_amd64.whl",
+    "url": "https://files.pythonhosted.org/packages/03/20/b675af723b9a61d48abd6a3d64cbb9797697d330255d1f8105713d54ed8e/psycopg_binary-3.2.3-cp313-cp313-win_amd64.whl",
+    "size": 2913413
+  },
+  {
+    "file": "pydantic-2.10.4-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/f3/26/3e1bbe954fde7ee22a6e7d31582c642aad9e84ffe4b5fb61e63b87cd326f/pydantic-2.10.4-py3-none-any.whl",
+    "size": 431765
+  },
+  {
+    "file": "pydantic_core-2.27.2-cp313-cp313-win_amd64.whl",
+    "url": "https://files.pythonhosted.org/packages/71/47/82b5e846e01b26ac6f1893d3c5f9f3a2eb6ba79be26eef0b759b4fe72946/pydantic_core-2.27.2-cp313-cp313-win_amd64.whl",
+    "size": 1990453
+  },
+  {
+    "file": "pydantic_settings-2.7.0-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/f9/00/57b4540deb5c3a39ba689bb519a4e03124b24ab8589e618be4aac2c769bd/pydantic_settings-2.7.0-py3-none-any.whl",
+    "size": 29549
+  },
+  {
+    "file": "pygments-2.20.0-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/f4/7e/a72dd26f3b0f4f2bf1dd8923c85f7ceb43172af56d63c7383eb62b332364/pygments-2.20.0-py3-none-any.whl",
+    "size": 1231151
+  },
+  {
+    "file": "pytest-8.3.4-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/11/92/76a1c94d3afee238333bc0a42b82935dd8f9cf8ce9e336ff87ee14d9e1cf/pytest-8.3.4-py3-none-any.whl",
+    "size": 343083
+  },
+  {
+    "file": "pytest_cov-6.0.0-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/36/3b/48e79f2cd6a61dbbd4807b4ed46cb564b4fd50a76166b1c4ea5c1d9e2371/pytest_cov-6.0.0-py3-none-any.whl",
+    "size": 22949
+  },
+  {
+    "file": "python_dateutil-2.9.0.post0-py2.py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/ec/57/56b9bcc3c9c6a792fcbaf139543cee77261f3651ca9da0c93f5c1221264b/python_dateutil-2.9.0.post0-py2.py3-none-any.whl",
+    "size": 229892
+  },
+  {
+    "file": "python_dotenv-1.0.1-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/6a/3e/b68c118422ec867fa7ab88444e1274aa40681c606d59ac27de5a5588f082/python_dotenv-1.0.1-py3-none-any.whl",
+    "size": 19863
+  },
+  {
+    "file": "python_stdnum-1.20-py2.py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/d6/0f/8639d60f6d7c169836694aa81504c4ee9a95dfb73ccdb16be66df4785f52/python_stdnum-1.20-py2.py3-none-any.whl",
+    "size": 1059803
+  },
+  {
+    "file": "pytz-2026.3.post1-py2.py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/0f/7b/39c34ca613b0b198cb866466651b26b045e2009864c5183c979a3b83f383/pytz-2026.3.post1-py2.py3-none-any.whl",
+    "size": 508283
+  },
+  {
+    "file": "rapidfuzz-3.11.0-cp313-cp313-win_amd64.whl",
+    "url": "https://files.pythonhosted.org/packages/e8/97/1c782140e688ea2c3337d94516c635c575aa39fe62782fd53ad5d2119df4/rapidfuzz-3.11.0-cp313-cp313-win_amd64.whl",
+    "size": 1604273
+  },
+  {
+    "file": "rich-13.9.4-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/19/71/39c7c0d87f8d4e6c020a393182060eaefeeae6c01dab6a84ec346f2567df/rich-13.9.4-py3-none-any.whl",
+    "size": 242424
+  },
+  {
+    "file": "ruff-0.8.6-py3-none-win_amd64.whl",
+    "url": "https://files.pythonhosted.org/packages/60/22/ae6bcaa0edc83af42751bd193138bfb7598b2990939d3e40494d6c00698c/ruff-0.8.6-py3-none-win_amd64.whl",
+    "size": 9673857
+  },
+  {
+    "file": "setuptools-83.0.0-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/5d/40/e1e72872c6354b306daef1703549e8e83b4d43cfea356311bf722a043752/setuptools-83.0.0-py3-none-any.whl",
+    "size": 1008090
+  },
+  {
+    "file": "six-1.17.0-py2.py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/b7/ce/149a00dd41f10bc29e5921b496af8b574d8413afcd5e30dfa0ed46c2cc5e/six-1.17.0-py2.py3-none-any.whl",
+    "size": 11050
+  },
+  {
+    "file": "sniffio-1.3.1-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/e9/44/75a9c9421471a6c4805dbf2356f7c181a29c1879239abab1ea2cc8f38b40/sniffio-1.3.1-py3-none-any.whl",
+    "size": 10235
+  },
+  {
+    "file": "SQLAlchemy-2.0.36-cp313-cp313-win_amd64.whl",
+    "url": "https://files.pythonhosted.org/packages/c1/ce/5f7428df55660d6879d0522adc73a3364970b5ef33ec17fa125c5dbcac1d/SQLAlchemy-2.0.36-cp313-cp313-win_amd64.whl",
+    "size": 2084574
+  },
+  {
+    "file": "tqdm-4.70.0-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/f9/1c/01bfd571a64e7f270e6bab5e33777debe0edc56759233ce84f27dec92d14/tqdm-4.70.0-py3-none-any.whl",
+    "size": 80184
+  },
+  {
+    "file": "types_python_dateutil-2.9.0.20241206-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/0f/b3/ca41df24db5eb99b00d97f89d7674a90cb6b3134c52fb8121b6d8d30f15c/types_python_dateutil-2.9.0.20241206-py3-none-any.whl",
+    "size": 14384
+  },
+  {
+    "file": "types_pytz-2026.3.1.20260727-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/9c/24/a654176875944981c75516857cd8750600eeb9ff7fc07a2b82573619a57c/types_pytz-2026.3.1.20260727-py3-none-any.whl",
+    "size": 10132
+  },
+  {
+    "file": "typing_extensions-4.16.0-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/49/d3/b8441a820a491ddfc024b0b0cf0393375b75ea13866d9c66727e54c2fc80/typing_extensions-4.16.0-py3-none-any.whl",
+    "size": 45571
+  },
+  {
+    "file": "tzdata-2024.2-py2.py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/a6/ab/7e5f53c3b9d14972843a647d8d7a853969a58aecc7559cb3267302c94774/tzdata-2024.2-py2.py3-none-any.whl",
+    "size": 346586
+  },
+  {
+    "file": "tzlocal-5.4.4-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/9e/a4/017a7a6cbe387d961a688ec31364ae60a5c4e22c96ae9921b79a947c855d/tzlocal-5.4.4-py3-none-any.whl",
+    "size": 18115
+  },
+  {
+    "file": "werkzeug-3.1.3-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/52/24/ab44c871b0f07f491e5d2ad12c9bd7358e527510618cb1b803a88e986db1/werkzeug-3.1.3-py3-none-any.whl",
+    "size": 224498
+  },
+  {
+    "file": "wheel-0.47.0-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/87/1b/9e33c09813d65e248f7f773119148a612516a4bea93e9c6f545f78455b7c/wheel-0.47.0-py3-none-any.whl",
+    "size": 32218
+  },
+  {
+    "file": "wrapt-2.3.0-cp313-cp313t-win_amd64.whl",
+    "url": "https://files.pythonhosted.org/packages/6b/ff/b94878f8eed809ca042685276bcea9f24e8c2ca7c9653bb80bbb920a68a5/wrapt-2.3.0-cp313-cp313t-win_amd64.whl",
+    "size": 82634
+  },
+  {
+    "file": "wtforms-3.2.2-py3-none-any.whl",
+    "url": "https://files.pythonhosted.org/packages/18/76/bb225c8300f3a0ba28e01df51419c6c9574a297c43d71b29048e03b65deb/wtforms-3.2.2-py3-none-any.whl",
+    "size": 158656
+  }
+]

@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Konfiguracja lokalna — NIGDY nie commitujemy sekretów
+.env
+.env.local
+
+# Dane osobowe klientów — arkusze wejściowe NIE trafiają do repozytorium.
+# Plik produkcyjny zawiera 1924 rekordy z nazwiskami, telefonami, NIP-ami
+# i adresami. Trzymaj go lokalnie i wgrywaj przez ekran /import.
+*.xlsx
+*.xls
+*.ods
+*.csv
+
+# Paczki pobrane ręcznie (obejście blokady PyPI w sieci firmowej)
+wheels/*.whl
+wheels/*.tar.gz
+
+# Tailwind standalone CLI — binarka, pobierana osobno
+tools/
+
+# Wynik builda CSS
+app/static/css/tailwind.css
+
+# Pliki wgrane przez użytkownika na /import
+instance/
+uploads/
+
+# Windows / edytory
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/

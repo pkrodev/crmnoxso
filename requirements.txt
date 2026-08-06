@@ -1,0 +1,52 @@
+# NOXSO CRM — zależności produkcyjne
+# Python 3.13
+
+# --- rdzeń aplikacji ---
+Flask==3.1.0
+Flask-SQLAlchemy==3.1.1
+Flask-Migrate==4.0.7
+Flask-Login==0.6.3
+Flask-WTF==1.2.2
+Flask-Limiter==3.9.2
+Werkzeug==3.1.3
+
+# --- baza danych ---
+SQLAlchemy==2.0.36
+alembic==1.14.0
+psycopg[binary]==3.2.3
+
+# --- walidacja ---
+pydantic==2.10.4
+pydantic-settings==2.7.0
+
+# --- hasła ---
+bcrypt==4.2.1
+
+# --- konfiguracja ---
+python-dotenv==1.0.1
+
+# --- zadania w tle ---
+APScheduler==3.11.0
+
+# --- HTTP (SMSPlanet, etap 7) ---
+httpx==0.28.1
+
+# --- arkusze (import) ---
+pandas==2.2.3
+odfpy==1.4.1
+openpyxl==3.1.5
+
+# --- normalizacja danych ---
+phonenumbers==8.13.52
+python-stdnum==1.20
+rapidfuzz==3.11.0
+charset-normalizer==3.4.1
+
+# --- AI (etap 5) ---
+openai==1.59.3
+
+# --- strefy czasowe ---
+tzdata==2024.2
+
+# --- serwer produkcyjny ---
+gunicorn==23.0.0

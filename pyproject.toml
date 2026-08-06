@@ -1,0 +1,38 @@
+[tool.ruff]
+line-length = 90
+target-version = "py313"
+exclude = [".venv", "migrations/versions", "wheels"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "C4", "SIM", "RUF"]
+ignore = [
+    "E501",   # długość linii pilnuje formatter
+    "RUF001", # polskie znaki w łańcuchach to nie „ambiguous unicode"
+    "RUF002",
+    "RUF003",
+    "B008",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101"]
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.mypy]
+python_version = "3.13"
+warn_unused_configs = true
+ignore_missing_imports = true
+check_untyped_defs = true
+exclude = ["\\.venv", "migrations", "wheels"]
+
+[[tool.mypy.overrides]]
+module = ["app.blueprints.*", "app.templates.*"]
+disable_error_code = ["misc"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --strict-markers"
+markers = [
+    "db: test wymagający połączenia z PostgreSQL",
+]
