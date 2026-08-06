@@ -1,0 +1,183 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Inter hostowany lokalnie — bez CDN.
+   Font zmienny: jeden plik na podzbiór obsługuje wszystkie potrzebne grubości
+   (400/500/600), zamiast sześciu osobnych plików.
+
+   Podzbiór latin-ext jest OBOWIĄZKOWY. Polskie ą ć ę ł ń ś ź ż leżą właśnie
+   w nim (w latin jest tylko ó) — bez tego pliku połowa diakrytyków spadłaby
+   na font zastępczy i tekst zacząłby „skakać". */
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("../fonts/inter-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF,
+    U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020,
+    U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("../fonts/inter-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@layer base {
+  body {
+    @apply bg-ink-50 text-ink-900 font-sans antialiased;
+  }
+
+  /* Tabelaryczne cyfry — kolumny z kwotami i numerami mają się zgadzać w pionie */
+  td,
+  th {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@layer components {
+  /* --- Przyciski ---------------------------------------------------------
+     Przycisk główny to CZARNY tekst na bursztynie (kontrast 11,4:1).
+     Biały tekst na bursztynie dałby 1,84:1 i byłby nieczytelny. */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 px-3 py-1.5 rounded
+           text-sm font-medium transition-colors
+           focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-amber-600
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-primary {
+    @apply btn bg-amber-500 text-ink-950 hover:bg-amber-600;
+  }
+  .btn-secondary {
+    @apply btn border border-ink-200 bg-white text-ink-900 hover:bg-ink-50;
+  }
+  .btn-danger {
+    @apply btn bg-danger text-white hover:bg-red-800;
+  }
+  .btn-ghost {
+    @apply btn text-ink-700 hover:bg-ink-200/60;
+  }
+
+  /* --- Karty ------------------------------------------------------------- */
+  .card {
+    @apply bg-white border border-ink-200 rounded;
+  }
+  .card-header {
+    @apply px-4 py-2.5 border-b border-ink-200 flex items-center justify-between;
+  }
+  .card-body {
+    @apply p-4;
+  }
+
+  /* --- Nagłówki sekcji ---------------------------------------------------
+     Wersaliki z rozstrzelonymi literami — nawiązanie do typografii logo. */
+  .section-title {
+    @apply text-xs font-semibold uppercase tracking-section text-ink-500;
+  }
+
+  /* --- Tabele ------------------------------------------------------------ */
+  .table {
+    @apply w-full text-sm border-collapse;
+  }
+  .table thead th {
+    @apply bg-amber-50 text-ink-900 text-left font-semibold px-3 py-2
+           border-b border-ink-200 whitespace-nowrap;
+  }
+  .table tbody td {
+    @apply px-3 py-1.5 border-b border-ink-200 align-top;
+  }
+  .table tbody tr:hover {
+    @apply bg-amber-50/50;
+  }
+  .table tbody tr.is-selected {
+    @apply bg-amber-100;
+  }
+
+  /* --- Pola formularzy --------------------------------------------------- */
+  .input {
+    @apply w-full px-2.5 py-1.5 text-sm bg-white border border-ink-200 rounded
+           placeholder:text-ink-500
+           focus:outline-none focus:ring-2 focus:ring-amber-600 focus:border-amber-600;
+  }
+  .label {
+    @apply block text-xs font-medium text-ink-700 mb-1;
+  }
+  .field-error {
+    @apply text-xs text-danger mt-1;
+  }
+
+  /* --- Etykiety statusów -------------------------------------------------
+     Bursztynu NIE używamy jako koloru tekstu na jasnym tle — na to jest
+     amber-800 (5,54:1) albo czarny tekst na bursztynowym tle. */
+  .badge {
+    @apply inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium
+           whitespace-nowrap;
+  }
+  .badge-neutral {
+    @apply badge bg-ink-200 text-ink-900;
+  }
+  .badge-brand {
+    @apply badge bg-amber-500 text-ink-950;
+  }
+  .badge-soft {
+    @apply badge bg-amber-50 text-amber-900 border border-amber-200;
+  }
+  .badge-success {
+    @apply badge bg-green-50 text-green-800 border border-green-200;
+  }
+  .badge-warning {
+    @apply badge bg-orange-50 text-orange-800 border border-orange-200;
+  }
+  .badge-danger {
+    @apply badge bg-red-50 text-red-800 border border-red-200;
+  }
+
+  /* --- Nawigacja --------------------------------------------------------- */
+  .nav-link {
+    @apply flex items-center gap-2.5 px-3 py-2 text-sm text-ink-200
+           border-l-[3px] border-transparent hover:bg-white/5 hover:text-white
+           transition-colors;
+  }
+  .nav-link-active {
+    @apply nav-link border-amber-500 text-amber-500 bg-white/5;
+  }
+
+  /* --- Linki -------------------------------------------------------------
+     Na jasnym tle dopiero amber-800 przechodzi próg WCAG AA. */
+  .link {
+    @apply text-amber-800 hover:text-amber-900 underline underline-offset-2;
+  }
+
+  /* --- Komunikaty -------------------------------------------------------- */
+  .flash {
+    @apply flex items-start gap-2 px-3 py-2 rounded text-sm border;
+  }
+  .flash-success {
+    @apply flash bg-green-50 border-green-200 text-green-800;
+  }
+  .flash-error {
+    @apply flash bg-red-50 border-red-200 text-red-800;
+  }
+  .flash-warning {
+    @apply flash bg-orange-50 border-orange-200 text-orange-800;
+  }
+  .flash-info {
+    @apply flash bg-amber-50 border-amber-200 text-amber-900;
+  }
+
+  /* --- Wskaźnik pracy HTMX ----------------------------------------------- */
+  .htmx-indicator {
+    @apply opacity-0 transition-opacity;
+  }
+  .htmx-request .htmx-indicator,
+  .htmx-request.htmx-indicator {
+    @apply opacity-100;
+  }
+}

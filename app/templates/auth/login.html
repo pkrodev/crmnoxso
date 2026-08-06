@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Logowanie — {{ app_name }}</title>
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/favicon.png') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/tailwind.css') }}">
+</head>
+<body class="min-h-screen bg-ink-950 flex items-center justify-center px-4">
+
+  <div class="w-full max-w-sm">
+    <div class="mb-8 px-6">
+      <img src="{{ url_for('static', filename='img/logo-light.png') }}"
+           alt="NOXSO" class="w-full h-auto">
+    </div>
+
+    <div class="bg-white rounded p-6">
+      <h1 class="section-title mb-5">Logowanie</h1>
+
+      {% include 'partials/_flash.html' %}
+
+      <form method="post" class="space-y-4">
+        {{ form.csrf_token }}
+
+        <div>
+          <label class="label" for="login">Login</label>
+          {{ form.login(class_="input", id="login", autocomplete="username", autofocus=true) }}
+          {% for error in form.login.errors %}
+            <p class="field-error">{{ error }}</p>
+          {% endfor %}
+        </div>
+
+        <div>
+          <label class="label" for="password">Hasło</label>
+          {{ form.password(class_="input", id="password", autocomplete="current-password") }}
+          {% for error in form.password.errors %}
+            <p class="field-error">{{ error }}</p>
+          {% endfor %}
+        </div>
+
+        <label class="flex items-center gap-2 text-sm text-ink-700">
+          {{ form.remember(class_="rounded border-ink-200 text-amber-600 focus:ring-amber-600") }}
+          Zapamiętaj mnie na 30 dni
+        </label>
+
+        <button type="submit" class="btn-primary w-full">Zaloguj</button>
+      </form>
+    </div>
+
+    <p class="text-center text-xs text-ink-500 mt-6">NOXSO CRM</p>
+  </div>
+
+</body>
+</html>

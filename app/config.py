@@ -1,0 +1,115 @@
+"""Konfiguracja aplikacji — wszystko z zmiennych środowiskowych."""
+
+from __future__ import annotations
+
+import os
+from datetime import timedelta
+
+
+def _database_url() -> str:
+    """Adres bazy, z podmianą prefiksu.
+
+    Railway podaje ``DATABASE_URL`` w formie ``postgres://...``, a SQLAlchemy 2.0
+    tego schematu już nie zna — wymaga ``postgresql+psycopg://``.
+    """
+    url = os.environ.get("DATABASE_URL", "")
+    if url.startswith("postgres://"):
+        url = url.replace("postgres://", "postgresql+psycopg://", 1)
+    elif url.startswith("postgresql://"):
+        url = url.replace("postgresql://", "postgresql+psycopg://", 1)
+    return url
+
+
+class Config:
+    """Wspólna baza konfiguracji."""
+
+    SECRET_KEY = os.environ.get("SECRET_KEY", "")
+
+    SQLALCHEMY_DATABASE_URI = _database_url()
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        "pool_pre_ping": True,  # Railway ubija bezczynne połączenia
+        "pool_recycle": 1800,
+    }
+
+    # Sesja
+    PERMANENT_SESSION_LIFETIME = timedelta(days=30)
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = "Lax"
+    SESSION_COOKIE_SECURE = True
+    REMEMBER_COOKIE_DURATION = timedelta(days=30)
+    REMEMBER_COOKIE_HTTPONLY = True
+    REMEMBER_COOKIE_SECURE = True
+
+    # Limit rozmiaru żądania — dotyczy endpointu transkrypcji (sekcja 9 specyfikacji).
+    # Upload arkusza na /import ma własny, wyższy limit sprawdzany w formularzu.
+    MAX_CONTENT_LENGTH = 16 * 1024 * 1024
+    INGEST_MAX_BYTES = 1 * 1024 * 1024
+    IMPORT_MAX_BYTES = 10 * 1024 * 1024
+
+    # Katalog na wgrane arkusze
+    UPLOAD_DIR = os.environ.get(
+        "UPLOAD_DIR", os.path.join(os.path.dirname(os.path.dirname(__file__)), "uploads")
+    )
+
+    # Użytkownik (jeden, bez tabeli w bazie — sekcja 7 specyfikacji)
+    ADMIN_LOGIN = os.environ.get("ADMIN_LOGIN", "")
+    ADMIN_PASSWORD_HASH = os.environ.get("ADMIN_PASSWORD_HASH", "")
+
+    # Strefa czasowa prezentacji (w bazie wszystko w UTC)
+    DISPLAY_TZ = os.environ.get("TZ", "Europe/Warsaw")
+
+    # SMS (etap 7)
+    SMS_PROVIDER = os.environ.get("SMS_PROVIDER", "smsplanet")
+    SMSPLANET_TOKEN = os.environ.get("SMSPLANET_TOKEN", "")
+    SMSPLANET_SIGNATURE_KEY = os.environ.get("SMSPLANET_SIGNATURE_KEY", "")
+    SMS_SENDER_NAME = os.environ.get("SMS_SENDER_NAME", "TEST")
+
+    # AI (etap 5)
+    DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY", "")
+    AI_MODEL = os.environ.get("AI_MODEL", "deepseek-chat")
+
+    # Endpoint transkrypcji (etap 4)
+    INGEST_TOKEN = os.environ.get("INGEST_TOKEN", "")
+
+    # Zadania w tle
+    SCHEDULER_ENABLED = os.environ.get("SCHEDULER_ENABLED", "1") == "1"
+
+    # Rate limiting
+    RATELIMIT_STORAGE_URI = "memory://"
+    RATELIMIT_HEADERS_ENABLED = True
+
+
+class DevConfig(Config):
+    DEBUG = True
+    # Bez HTTPS na localhoście ciasteczko z flagą Secure nigdy nie dotrze
+    SESSION_COOKIE_SECURE = False
+    REMEMBER_COOKIE_SECURE = False
+    SQLALCHEMY_DATABASE_URI = _database_url() or (
+        "postgresql+psycopg://postgres:postgres@localhost:5432/noxso_crm"
+    )
+    SECRET_KEY = os.environ.get("SECRET_KEY", "dev-only-nie-uzywaj-na-produkcji")
+
+
+class TestConfig(Config):
+    TESTING = True
+    WTF_CSRF_ENABLED = False
+    SCHEDULER_ENABLED = False
+    SESSION_COOKIE_SECURE = False
+    SECRET_KEY = "test"
+    SQLALCHEMY_DATABASE_URI = os.environ.get(
+        "TEST_DATABASE_URL",
+        "postgresql+psycopg://postgres:postgres@localhost:5432/noxso_crm_test",
+    )
+
+
+class ProdConfig(Config):
+    DEBUG = False
+
+
+CONFIGS = {"development": DevConfig, "testing": TestConfig, "production": ProdConfig}
+
+
+def get_config(name: str | None = None) -> type[Config]:
+    name = name or os.environ.get("FLASK_ENV", "development")
+    return CONFIGS.get(name, DevConfig)

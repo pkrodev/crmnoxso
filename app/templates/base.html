@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ app_name }}{% endblock %}</title>
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/favicon.png') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/tailwind.css') }}">
+  <script src="{{ url_for('static', filename='js/htmx.min.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/alpine.min.js') }}" defer></script>
+</head>
+{#
+  Token CSRF ustawiony raz, globalnie — dzięki temu każde żądanie HTMX
+  (hx-post, hx-put, hx-delete) nosi go automatycznie i nie trzeba go
+  powtarzać przy każdym elemencie.
+#}
+<body class="min-h-screen"
+      hx-headers='{"X-CSRFToken": "{{ csrf_token_value }}"}'>
+
+<div class="flex min-h-screen">
+
+  <aside class="w-56 shrink-0 bg-ink-950 flex flex-col">
+    <div class="px-4 py-5 border-b border-white/10">
+      {# Wariant jasny: w oryginale napis „NOXSO" i traktor są czarne,
+         więc na tym tle zniknęłyby całkowicie. #}
+      <img src="{{ url_for('static', filename='img/logo-light.png') }}"
+           alt="NOXSO" class="w-full h-auto">
+    </div>
+
+    <nav class="flex-1 py-3">
+      {% set nav = [
+        ('dashboard.index',  'Pulpit',    'M3 12l9-9 9 9M5 10v10h14V10'),
+        ('clients.index',    'Klienci',   'M17 20h5v-2a3 3 0 00-5.36-1.86M17 20H7m10 0v-2c0-.66-.13-1.3-.36-1.86m0 0a5 5 0 00-9.28 0M7 20H2v-2a3 3 0 015.36-1.86M7 20v-2c0-.66.13-1.3.36-1.86m0 0a5 5 0 019.28 0M15 7a3 3 0 11-6 0 3 3 0 016 0'),
+        ('transcripts.index','Rozmowy',   'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.42-4.03 8-9 8a9.9 9.9 0 01-4.25-.95L3 20l1.4-3.72A7.93 7.93 0 013 12c0-4.42 4.03-8 9-8s9 3.58 9 8z'),
+        ('campaigns.index',  'Kampanie',  'M11 5.88V18.1M11 5.88l7-2.62v14.85l-7-2.62M11 5.88H6a3 3 0 000 6h5'),
+        ('calendar.index',   'Kalendarz', 'M8 7V3m8 4V3M3 11h18M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z'),
+        ('imports.index',    'Import',    'M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3'),
+        ('settings.index',   'Ustawienia','M10.3 4.3a2 2 0 013.4 0l.5.9a2 2 0 002 1l1 .1a2 2 0 011.7 2.9l-.5.9a2 2 0 000 2l.5.9a2 2 0 01-1.7 2.9l-1 .1a2 2 0 00-2 1l-.5.9a2 2 0 01-3.4 0l-.5-.9a2 2 0 00-2-1l-1-.1a2 2 0 01-1.7-2.9l.5-.9a2 2 0 000-2l-.5-.9A2 2 0 015.8 6.3l1-.1a2 2 0 002-1zM12 15a3 3 0 100-6 3 3 0 000 6z')
+      ] %}
+
+      {% for endpoint, label, icon in nav %}
+        {% set available = endpoint in url_map_endpoints %}
+        {% set active = available and request.endpoint and request.endpoint.startswith(endpoint.split('.')[0] + '.') %}
+        {% if available %}
+          <a href="{{ url_for(endpoint) }}" class="{{ 'nav-link-active' if active else 'nav-link' }}">
+            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="1.75"
+                 viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+              <path d="{{ icon }}"></path>
+            </svg>
+            {{ label }}
+          </a>
+        {% else %}
+          {# Ekran powstanie w kolejnym etapie — pozycja widoczna, ale nieaktywna #}
+          <span class="nav-link opacity-30 cursor-default" title="Ekran powstanie w kolejnym etapie">
+            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="1.75"
+                 viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+              <path d="{{ icon }}"></path>
+            </svg>
+            {{ label }}
+          </span>
+        {% endif %}
+      {% endfor %}
+    </nav>
+
+    {% if current_user.is_authenticated %}
+      <div class="px-3 py-3 border-t border-white/10">
+        <div class="text-xs text-ink-500 mb-2 px-1">{{ current_user.display_name }}</div>
+        <form method="post" action="{{ url_for('auth.logout') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token_value }}">
+          <button type="submit"
+                  class="w-full text-left px-1 text-sm text-ink-200 hover:text-white">
+            Wyloguj
+          </button>
+        </form>
+      </div>
+    {% endif %}
+  </aside>
+
+  <main class="flex-1 min-w-0">
+    <header class="bg-white border-b border-ink-200 px-6 py-3 flex items-center justify-between">
+      <div>
+        <h1 class="text-lg font-semibold text-ink-900">{% block heading %}{% endblock %}</h1>
+        {% block subheading %}{% endblock %}
+      </div>
+      <div class="flex items-center gap-2">{% block actions %}{% endblock %}</div>
+    </header>
+
+    <div class="px-6 py-4">
+      {% include 'partials/_flash.html' %}
+      {% block content %}{% endblock %}
+    </div>
+  </main>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% block title %}Pulpit — {{ app_name }}{% endblock %}
+{% block heading %}Pulpit{% endblock %}
+
+{% block content %}
+
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
+  {% set tiles = [
+    ('Klienci ogółem', total_clients, none),
+    ('Nowi w tym miesiącu', new_this_month, none),
+    ('Rozmowy do przejrzenia', to_review, 'warning'),
+    ('Wydarzenia w 7 dni', upcoming_count, none)
+  ] %}
+  {% for label, value, tone in tiles %}
+    <div class="card">
+      <div class="card-body">
+        <div class="section-title mb-2">{{ label }}</div>
+        <div class="text-2xl font-semibold {{ 'text-warning' if tone == 'warning' and value else 'text-ink-900' }}">
+          {{ value }}
+        </div>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+
+  <div class="lg:col-span-2 card">
+    <div class="card-header">
+      <h2 class="section-title">Ostatnie zdarzenia</h2>
+    </div>
+    {% if recent %}
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Kiedy</th>
+            <th>Klient</th>
+            <th>Zdarzenie</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for activity in recent %}
+            <tr>
+              <td class="text-ink-500 whitespace-nowrap">{{ activity.occurred_at | relative_pl }}</td>
+              <td class="font-medium">{{ activity.client.name if activity.client else '—' }}</td>
+              <td>
+                <span class="{{ 'badge-soft' if activity.actor.value == 'AI' else 'badge-neutral' }}">
+                  {{ activity_labels.get(activity.type, activity.type.value) }}
+                </span>
+                <span class="text-ink-700">{{ activity.title }}</span>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <div class="card-body text-ink-500">
+        Brak zdarzeń. Zacznij od <a class="link" href="{{ url_for('imports.index') }}">importu bazy klientów</a>.
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="space-y-4">
+    <div class="card">
+      <div class="card-header">
+        <h2 class="section-title">Nadchodzące wydarzenia</h2>
+      </div>
+      <div class="card-body">
+        {% if upcoming %}
+          <ul class="space-y-2">
+            {% for event in upcoming %}
+              <li class="flex gap-2 text-sm">
+                <span class="text-ink-500 whitespace-nowrap">{{ event.starts_at | datetime_pl('%d.%m %H:%M') }}</span>
+                <span class="flex-1">{{ event.title }}</span>
+                {% if event.source.value == 'AI' and not event.confirmed %}
+                  <span class="badge-soft">AI</span>
+                {% endif %}
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="text-ink-500">Nic w najbliższym tygodniu.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h2 class="section-title">Ostatnia kampania</h2>
+      </div>
+      <div class="card-body">
+        {% if last_campaign %}
+          <div class="font-medium">{{ last_campaign.name }}</div>
+          <div class="text-ink-500 text-sm">{{ last_campaign.created_at | date_pl }}</div>
+        {% else %}
+          <p class="text-ink-500">Jeszcze żadnej.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if blacklisted %}
+      <div class="card">
+        <div class="card-body flex items-center justify-between">
+          <span class="section-title">Czarna lista</span>
+          <span class="badge-danger">{{ blacklisted }}</span>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

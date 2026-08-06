@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Błąd{% endblock %} — NOXSO CRM</title>
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/favicon.png') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/tailwind.css') }}">
+</head>
+<body class="min-h-screen flex items-center justify-center px-4">
+  <div class="max-w-md text-center">
+    <div class="text-5xl font-semibold text-ink-900 mb-3">{% block code %}{% endblock %}</div>
+    <h1 class="text-lg font-medium mb-2">{% block headline %}{% endblock %}</h1>
+    <p class="text-ink-700 mb-6">{% block message %}{% endblock %}</p>
+    <a href="{{ url_for('dashboard.index') }}" class="btn-primary">Wróć na pulpit</a>
+  </div>
+</body>
+</html>
