@@ -28,12 +28,18 @@ wheels/*.tar.gz
 # Tailwind standalone CLI — binarka, pobierana osobno
 tools/
 
-# Wynik builda CSS
-app/static/css/tailwind.css
+# Wynik builda CSS — CELOWO commitowany.
+# Railway nie ma Node'a ani standalone CLI Tailwinda, a Procfile w kroku
+# `release` odpala wyłącznie migracje. Gdyby ten plik był ignorowany,
+# wdrożona aplikacja poszłaby na produkcję bez arkusza stylów.
+# Po zmianach w szablonach: .\scripts\build_css.ps1 i commit wyniku.
 
 # Pliki wgrane przez użytkownika na /import
 instance/
 uploads/
+
+# Zrzuty rozmów z Claude Code zapisane w katalogu projektu
+20??-??-??-*.txt
 
 # Windows / edytory
 Thumbs.db

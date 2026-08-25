@@ -1,0 +1,15 @@
+{# Status klienta. Uwaga na etap 7: ustawienie BLACKLIST musi wtedy dodatkowo
+   wywołać blacklist/add u dostawcy SMS, a zdjęcie — blacklist/remove. #}
+<div id="status-klienta" class="flex items-center gap-2">
+  <span class="label mb-0">Status</span>
+  <select class="input py-1 w-auto" name="status"
+          hx-post="{{ url_for('clients.status_set', client_id=client.id) }}"
+          hx-target="#status-klienta" hx-swap="outerHTML"
+          hx-trigger="change">
+    {% for status in statuses %}
+      <option value="{{ status.value }}" {{ 'selected' if status == client.status }}>
+        {{ client_status_labels[status.value] }}
+      </option>
+    {% endfor %}
+  </select>
+</div>

@@ -1,0 +1,117 @@
+{#
+  Fragment podmieniany przez HTMX przy każdym wyszukiwaniu, filtrze i zmianie
+  strony. Musi zawierać także paginację, bo ta zmienia się razem z wynikami.
+#}
+<div id="tabela-klientow" class="card overflow-hidden">
+
+  {% if page.rows %}
+    <div class="overflow-x-auto">
+      <table class="table">
+        <thead>
+          <tr>
+            <th class="w-8"></th>
+            <th>Nazwa</th>
+            <th>Miasto</th>
+            <th>Telefon główny</th>
+            <th>Tagi</th>
+            <th>Ostatni kontakt</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for client, last_contact in page.rows %}
+            <tr :class="selected.includes({{ client.id }}) && 'is-selected'">
+              <td>
+                <input type="checkbox" value="{{ client.id }}" x-model.number="selected"
+                       aria-label="Zaznacz {{ client.name }}">
+              </td>
+
+              {# Nazwa klienta to najmocniej wyeksponowany element wiersza. #}
+              <td>
+                <a href="{{ url_for('clients.detail', client_id=client.id) }}"
+                   class="font-medium text-ink-900 hover:text-amber-800">{{ client.name }}</a>
+                {% if client.acronym %}
+                  <span class="text-xs text-ink-500 ml-1.5">{{ client.acronym }}</span>
+                {% endif %}
+                {% if client.nip and not client.nip_valid %}
+                  <span class="text-danger ml-1" title="NIP nie przechodzi sumy kontrolnej">!</span>
+                {% endif %}
+              </td>
+
+              <td class="text-ink-700">{{ client.city or '—' }}</td>
+
+              <td class="text-ink-700 whitespace-nowrap">
+                {% set phone = client.primary_phone %}
+                {% if phone and phone.e164 %}
+                  {{ phone.e164 | phone_pl }}
+                {% elif phone %}
+                  <span class="text-orange-700" title="Numeru nie udało się rozpoznać">{{ phone.raw }}</span>
+                {% else %}—{% endif %}
+              </td>
+
+              <td>
+                {% for tag in client.tags %}
+                  <span class="badge-soft mr-1">{{ tag.name }}</span>
+                {% else %}
+                  <span class="text-ink-500">—</span>
+                {% endfor %}
+              </td>
+
+              <td class="text-ink-700 whitespace-nowrap">{{ last_contact | relative_pl }}</td>
+
+              <td>
+                {% if client.status.value == 'ACTIVE' %}
+                  <span class="badge-success">{{ client_status_labels[client.status.value] }}</span>
+                {% elif client.status.value == 'BLACKLIST' %}
+                  <span class="badge-danger">{{ client_status_labels[client.status.value] }}</span>
+                {% else %}
+                  <span class="badge-neutral">{{ client_status_labels[client.status.value] }}</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if page.pages > 1 %}
+      <div class="px-4 py-2.5 border-t border-ink-200 flex items-center justify-between text-sm">
+        <span class="text-ink-500">
+          {{ page.first_index }}–{{ page.last_index }} z {{ page.total }}
+        </span>
+
+        <div class="flex items-center gap-1">
+          {% set params = filters.as_params() %}
+          {% if page.has_prev %}
+            <a class="btn-secondary"
+               hx-get="{{ url_for('clients.index', strona=page.page - 1, **params) }}"
+               hx-target="#tabela-klientow" hx-swap="outerHTML" hx-push-url="true"
+               href="{{ url_for('clients.index', strona=page.page - 1, **params) }}">Poprzednia</a>
+          {% else %}
+            <span class="btn-secondary opacity-40 cursor-default">Poprzednia</span>
+          {% endif %}
+
+          <span class="px-2 text-ink-700">{{ page.page }} / {{ page.pages }}</span>
+
+          {% if page.has_next %}
+            <a class="btn-secondary"
+               hx-get="{{ url_for('clients.index', strona=page.page + 1, **params) }}"
+               hx-target="#tabela-klientow" hx-swap="outerHTML" hx-push-url="true"
+               href="{{ url_for('clients.index', strona=page.page + 1, **params) }}">Następna</a>
+          {% else %}
+            <span class="btn-secondary opacity-40 cursor-default">Następna</span>
+          {% endif %}
+        </div>
+      </div>
+    {% endif %}
+
+  {% else %}
+    <div class="px-4 py-10 text-center">
+      <p class="text-ink-700">Nic nie pasuje do tych kryteriów.</p>
+      {% if filters.active %}
+        <a href="{{ url_for('clients.index') }}" class="link text-sm">wyczyść filtry</a>
+      {% endif %}
+    </div>
+  {% endif %}
+
+</div>

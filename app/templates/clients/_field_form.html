@@ -1,0 +1,22 @@
+{# Pole w trybie edycji. Zapis (`hx-put`) i anulowanie (`hx-get`) wracają
+   tym samym fragmentem co przed kliknięciem — _field.html. #}
+<div id="pole-{{ field_name }}" class="py-1.5 border-b border-ink-200 last:border-0">
+  <span class="label mb-0">{{ label }}</span>
+
+  <form class="flex items-center gap-1.5 mt-0.5"
+        hx-put="{{ url_for('clients.field', client_id=client.id, field_name=field_name) }}"
+        hx-target="#pole-{{ field_name }}"
+        hx-swap="outerHTML">
+    <input class="input py-1" type="{{ 'email' if field_name == 'email' else 'text' }}"
+           name="value" value="{{ value }}" autofocus
+           {% if field_name == 'postal_code' %}placeholder="63-330"{% endif %}
+           {% if field_name == 'nip' %}placeholder="617-101-01-49"{% endif %}>
+
+    <button type="submit" class="btn-primary py-1 shrink-0">Zapisz</button>
+
+    <button type="button" class="btn-ghost py-1 shrink-0"
+            hx-get="{{ url_for('clients.field', client_id=client.id, field_name=field_name) }}"
+            hx-target="#pole-{{ field_name }}"
+            hx-swap="outerHTML">Anuluj</button>
+  </form>
+</div>

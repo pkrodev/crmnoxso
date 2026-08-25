@@ -42,7 +42,7 @@ def _run_import_job(app: Flask, job_id: int) -> None:
     with app.app_context():
         try:
             run_import(job_id)
-        except Exception:  # noqa: BLE001 — status błędu zapisuje run_import
+        except Exception:
             app.logger.exception("Import %s zakończył się błędem", job_id)
         finally:
             db.session.remove()

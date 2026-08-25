@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% block title %}Klienci · {{ app_name }}{% endblock %}
+{% block heading %}Klienci{% endblock %}
+
+{% block subheading %}
+  <p class="text-xs text-ink-500 mt-0.5">
+    {{ page.total }} {{ plural_pl(page.total, 'klient', 'klientów', 'klientów') }}
+    {%- if filters.active %} po zawężeniu{% endif %}
+  </p>
+{% endblock %}
+
+{% block actions %}
+  <a href="{{ url_for('clients.create') }}" class="btn-primary">Nowy klient</a>
+{% endblock %}
+
+{% block content %}
+{#
+  Alpine trzyma TYLKO zaznaczenie wierszy — jedyny stan, który musi żyć
+  w przeglądarce. Wyszukiwarka, filtry i paginacja idą przez HTMX i wracają
+  jako gotowy fragment HTML z serwera.
+#}
+<div x-data="{ selected: [] }">
+
+  <form class="card mb-3"
+        hx-get="{{ url_for('clients.index') }}"
+        hx-target="#tabela-klientow"
+        hx-swap="outerHTML"
+        hx-indicator="#szukanie"
+        hx-trigger="submit, keyup changed delay:300ms from:#pole-szukania, change from:select, change from:input[type=checkbox]"
+        hx-push-url="true">
+
+    <div class="card-body grid gap-3 md:grid-cols-[minmax(0,2fr)_repeat(3,minmax(0,1fr))]">
+      <div>
+        <label class="label" for="pole-szukania">Szukaj</label>
+        <input id="pole-szukania" class="input" type="search" name="q"
+               value="{{ filters.query }}" autocomplete="off"
+               placeholder="nazwa, miasto, NIP albo telefon w dowolnym zapisie">
+        <p class="text-xs text-ink-500 mt-1">
+          Numer znajdziesz wpisując <code>601092947</code>, <code>601-092-947</code>
+          albo <code>+48601092947</code> — wynik jest ten sam.
+        </p>
+      </div>
+
+      <div>
+        <label class="label" for="filtr-miasto">Miasto</label>
+        <select id="filtr-miasto" class="input" name="miasto">
+          <option value="">wszystkie</option>
+          {% for city in cities %}
+            <option value="{{ city }}" {{ 'selected' if city == filters.city }}>{{ city }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div>
+        <label class="label" for="filtr-tag">Tag</label>
+        <select id="filtr-tag" class="input" name="tag">
+          <option value="">wszystkie</option>
+          {% for tag in tags %}
+            <option value="{{ tag.name }}" {{ 'selected' if tag.name == filters.tag }}>{{ tag.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div>
+        <label class="label" for="filtr-status">Status</label>
+        <select id="filtr-status" class="input" name="status">
+          <option value="">wszystkie</option>
+          {% for status in statuses %}
+            <option value="{{ status.value }}" {{ 'selected' if status.value == filters.status }}>
+              {{ client_status_labels[status.value] }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <div class="px-4 pb-3 flex flex-wrap items-center gap-4">
+      <label class="flex items-center gap-1.5 text-sm text-ink-700">
+        <input type="checkbox" name="ma_email" value="1" {{ 'checked' if filters.has_email }}>
+        ma e-mail
+      </label>
+      <label class="flex items-center gap-1.5 text-sm text-ink-700">
+        <input type="checkbox" name="ma_telefon" value="1" {{ 'checked' if filters.has_phone }}>
+        ma telefon
+      </label>
+
+      <span id="szukanie" class="htmx-indicator text-xs text-ink-500">szukam…</span>
+
+      {% if filters.active %}
+        <a href="{{ url_for('clients.index') }}" class="link text-sm ml-auto">wyczyść filtry</a>
+      {% endif %}
+    </div>
+  </form>
+
+  {# Pasek akcji masowych — pojawia się dopiero, gdy coś jest zaznaczone #}
+  <div x-show="selected.length" x-cloak
+       class="mb-3 flex items-center gap-3 px-4 py-2 bg-amber-100 border border-amber-200 rounded">
+    <span class="text-sm text-ink-900">
+      Zaznaczono <span x-text="selected.length"></span>
+    </span>
+    {# Kreator kampanii powstaje w etapie 7 — przycisk jest, ale nieaktywny,
+       żeby nie udawać funkcji, której jeszcze nie ma. #}
+    <button type="button" class="btn-secondary" disabled
+            title="Kreator kampanii SMS powstanie w etapie 7">
+      Wyślij SMS do zaznaczonych
+    </button>
+    <button type="button" class="btn-ghost ml-auto" @click="selected = []">odznacz</button>
+  </div>
+
+  {% include 'clients/_table.html' %}
+</div>
+{% endblock %}

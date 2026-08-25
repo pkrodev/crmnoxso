@@ -1,0 +1,51 @@
+{# Lista numerów klienta: dodaj / usuń / ustaw jako główny.
+   Każda akcja wraca tym samym fragmentem, więc lista odświeża się w miejscu. #}
+<div id="telefony">
+  <ul class="divide-y divide-ink-200">
+    {% for phone in client.phones %}
+      <li class="flex items-center gap-2 py-1.5">
+        <span class="flex-1 text-sm {{ 'text-ink-900' if phone.e164 else 'text-orange-700' }}">
+          {% if phone.e164 %}
+            {{ phone.e164 | phone_pl }}
+          {% else %}
+            {{ phone.raw }}
+            <span class="text-xs">(nierozpoznany)</span>
+          {% endif %}
+          {% if phone.label %}
+            <span class="text-xs text-ink-500 ml-1">{{ phone.label }}</span>
+          {% endif %}
+        </span>
+
+        {% if phone.is_primary %}
+          <span class="badge-brand shrink-0">główny</span>
+        {% else %}
+          <button type="button" class="btn-ghost py-0.5 text-xs shrink-0"
+                  hx-post="{{ url_for('clients.phone_primary', client_id=client.id, phone_id=phone.id) }}"
+                  hx-target="#telefony" hx-swap="outerHTML">ustaw główny</button>
+        {% endif %}
+
+        <button type="button" class="btn-ghost py-0.5 text-xs text-danger shrink-0"
+                hx-delete="{{ url_for('clients.phone_delete', client_id=client.id, phone_id=phone.id) }}"
+                hx-target="#telefony" hx-swap="outerHTML"
+                hx-confirm="Usunąć numer {{ phone.e164 or phone.raw }}?">usuń</button>
+      </li>
+    {% else %}
+      <li class="py-1.5 text-sm text-ink-500">Brak numerów.</li>
+    {% endfor %}
+  </ul>
+
+  <form class="flex items-center gap-1.5 mt-2"
+        hx-post="{{ url_for('clients.phone_add', client_id=client.id) }}"
+        hx-target="#telefony" hx-swap="outerHTML"
+        hx-on::after-request="this.reset()">
+    <input class="input py-1" name="phone" placeholder="601 092 947" autocomplete="off">
+    <input class="input py-1 w-24" name="label" placeholder="etykieta" autocomplete="off">
+    <button type="submit" class="btn-secondary py-1 shrink-0">Dodaj</button>
+  </form>
+
+  {% if error %}
+    <p class="field-error">{{ error }}</p>
+  {% elif warning %}
+    <p class="text-xs text-orange-700 mt-1">{{ warning }}</p>
+  {% endif %}
+</div>

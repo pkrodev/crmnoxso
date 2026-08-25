@@ -26,7 +26,7 @@ class Note(TimestampMixin, db.Model):
         sa.Boolean, nullable=False, default=False, server_default=sa.false()
     )
 
-    client: Mapped["Client"] = relationship(back_populates="notes")
+    client: Mapped[Client] = relationship(back_populates="notes")
 
     __table_args__ = (sa.Index("ix_notes_client_created", "client_id", "created_at"),)
 

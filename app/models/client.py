@@ -80,28 +80,28 @@ class Client(TimestampMixin, db.Model):
     )
     sms_consent_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True))
 
-    phones: Mapped[list["Phone"]] = relationship(
+    phones: Mapped[list[Phone]] = relationship(
         back_populates="client",
         cascade="all, delete-orphan",
         order_by="Phone.is_primary.desc(), Phone.id",
         lazy="selectin",
     )
-    notes: Mapped[list["Note"]] = relationship(
+    notes: Mapped[list[Note]] = relationship(
         back_populates="client", cascade="all, delete-orphan"
     )
-    activities: Mapped[list["Activity"]] = relationship(
+    activities: Mapped[list[Activity]] = relationship(
         back_populates="client", cascade="all, delete-orphan"
     )
-    transcripts: Mapped[list["Transcript"]] = relationship(back_populates="client")
-    events: Mapped[list["CalendarEvent"]] = relationship(back_populates="client")
-    tags: Mapped[list["Tag"]] = relationship(
+    transcripts: Mapped[list[Transcript]] = relationship(back_populates="client")
+    events: Mapped[list[CalendarEvent]] = relationship(back_populates="client")
+    tags: Mapped[list[Tag]] = relationship(
         secondary=client_tags, back_populates="clients", lazy="selectin"
     )
 
     __table_args__ = (sa.Index("ix_clients_name_city", "name", "city"),)
 
     @property
-    def primary_phone(self) -> "Phone | None":
+    def primary_phone(self) -> Phone | None:
         for phone in self.phones:
             if phone.is_primary:
                 return phone
@@ -143,7 +143,7 @@ class Phone(db.Model):
     )
     label: Mapped[str | None] = mapped_column(sa.String(40))
 
-    client: Mapped["Client"] = relationship(back_populates="phones")
+    client: Mapped[Client] = relationship(back_populates="phones")
 
     def __repr__(self) -> str:
         return f"<Phone {self.e164 or self.raw!r}>"
@@ -156,7 +156,7 @@ class Tag(db.Model):
     name: Mapped[str] = mapped_column(sa.String(64), nullable=False, unique=True)
     color: Mapped[str | None] = mapped_column(sa.String(16))
 
-    clients: Mapped[list["Client"]] = relationship(
+    clients: Mapped[list[Client]] = relationship(
         secondary=client_tags, back_populates="tags"
     )
 

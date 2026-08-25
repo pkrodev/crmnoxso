@@ -57,8 +57,8 @@ class Transcript(db.Model):
     )
     processed_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True))
 
-    client: Mapped["Client | None"] = relationship(back_populates="transcripts")
-    events: Mapped[list["CalendarEvent"]] = relationship(back_populates="transcript")
+    client: Mapped[Client | None] = relationship(back_populates="transcripts")
+    events: Mapped[list[CalendarEvent]] = relationship(back_populates="transcript")
 
     def __repr__(self) -> str:
         return f"<Transcript {self.id} {self.status.value}>"

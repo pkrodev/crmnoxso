@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 import logging
-import os
+import threading
 from pathlib import Path
 
-from dotenv import load_dotenv
 from flask import Flask, render_template, request
 from flask_login import current_user
 from flask_wtf.csrf import CSRFError
@@ -15,8 +14,6 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from app.config import Config, get_config
 from app.extensions import csrf, db, limiter, login_manager, migrate, scheduler
 from app.filters import register_filters
-
-load_dotenv()
 
 # Endpointy dostępne bez logowania. Blueprint `api` ma własną autoryzację
 # (token po stronie nagłówka, podpis HMAC webhooka), więc też jest tu wymieniony.
@@ -55,10 +52,11 @@ def _init_extensions(app: Flask) -> None:
 
 
 def _register_blueprints(app: Flask) -> None:
-    from app.blueprints import auth, dashboard, imports
+    from app.blueprints import auth, clients, dashboard, imports
 
     app.register_blueprint(auth.bp)
     app.register_blueprint(dashboard.bp)
+    app.register_blueprint(clients.bp, url_prefix="/clients")
     app.register_blueprint(imports.bp, url_prefix="/import")
 
 
@@ -143,24 +141,39 @@ def _ensure_dirs(app: Flask) -> None:
 def _start_scheduler(app: Flask) -> None:
     """Uruchomienie APSchedulera w procesie aplikacji.
 
+    Scheduler startuje LENIWIE — przy pierwszym obsłużonym żądaniu, nie przy
+    budowie aplikacji. Powód: proces-rodzic reloadera Flaska nie obsługuje
+    żądań, więc sam z siebie nigdy nie odpali drugiej kopii zadań, a polecenia
+    CLI (``flask db upgrade``) nie wstają z niepotrzebnym schedulerem.
+
+    Wcześniejsza wersja pomijała start, gdy ``DEBUG`` było włączone, a zmienna
+    ``WERKZEUG_RUN_MAIN`` nie miała wartości ``"true"``. Tę zmienną ustawia
+    wyłącznie reloader, więc serwer deweloperski uruchomiony BEZ przeładowywania
+    nie startował schedulera w ogóle. ``enqueue_import`` dokładał wtedy zadanie
+    do maszyny, która nie chodzi — import wisiał na statusie „Oczekuje" bez
+    jednego wpisu w logu.
+
     Przy jednym workerze Gunicorna (``--workers 1``, tak jak w Procfile) nie ma
-    ryzyka, że zadanie wykona się kilka razy równolegle. W trybie deweloperskim
-    reloader Flaska startuje proces dwa razy — scheduler odpalamy tylko w tym
-    właściwym.
+    ryzyka, że zadanie wykona się kilka razy równolegle.
     """
     if not app.config.get("SCHEDULER_ENABLED", True):
-        return
-    if app.config.get("DEBUG") and os.environ.get("WERKZEUG_RUN_MAIN") != "true":
-        return
-    if scheduler.running:
         return
 
     from app.tasks import register_jobs
 
     logging.getLogger("apscheduler").setLevel(logging.WARNING)
-    register_jobs(app, scheduler)
-    scheduler.start()
-    app.logger.info("APScheduler wystartował.")
+    lock = threading.Lock()
+
+    @app.before_request
+    def boot_scheduler():  # type: ignore[misc]
+        if scheduler.running:
+            return None
+        with lock:
+            if not scheduler.running:
+                register_jobs(app, scheduler)
+                scheduler.start()
+                app.logger.info("APScheduler wystartował.")
+        return None
 
 
 __all__ = ["Config", "create_app"]

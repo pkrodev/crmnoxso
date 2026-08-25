@@ -46,10 +46,10 @@ class Campaign(db.Model):
         sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()
     )
 
-    batches: Mapped[list["CampaignBatch"]] = relationship(
+    batches: Mapped[list[CampaignBatch]] = relationship(
         back_populates="campaign", cascade="all, delete-orphan"
     )
-    recipients: Mapped[list["CampaignRecipient"]] = relationship(
+    recipients: Mapped[list[CampaignRecipient]] = relationship(
         back_populates="campaign", cascade="all, delete-orphan"
     )
 
@@ -88,7 +88,7 @@ class CampaignBatch(db.Model):
     error_message: Mapped[str | None] = mapped_column(sa.Text)
     sent_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True))
 
-    campaign: Mapped["Campaign"] = relationship(back_populates="batches")
+    campaign: Mapped[Campaign] = relationship(back_populates="batches")
 
     def __repr__(self) -> str:
         return f"<CampaignBatch {self.id} provider={self.provider_id}>"
@@ -119,8 +119,8 @@ class CampaignRecipient(db.Model):
     delivery_error: Mapped[str | None] = mapped_column(sa.String(255))
     sent_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True))
 
-    campaign: Mapped["Campaign"] = relationship(back_populates="recipients")
-    client: Mapped["Client | None"] = relationship()
+    campaign: Mapped[Campaign] = relationship(back_populates="recipients")
+    client: Mapped[Client | None] = relationship()
 
     __table_args__ = (
         sa.Index("ix_campaign_recipients_campaign_status", "campaign_id", "status"),

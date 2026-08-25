@@ -19,9 +19,9 @@ from __future__ import annotations
 
 import unicodedata
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import pandas as pd
 import sqlalchemy as sa
@@ -111,6 +111,9 @@ def read_sheet(path: str | Path) -> Sheet:
     path = Path(path)
     suffix = path.suffix.lower()
 
+    # Adnotacja Literal jest konieczna: read_excel ma przeciążenia, a zwykły str
+    # nie pasuje do żadnego z nich.
+    engine: Literal["odf", "openpyxl"]
     if suffix == ".ods":
         engine = "odf"
     elif suffix in {".xlsx", ".xlsm"}:
@@ -124,10 +127,8 @@ def read_sheet(path: str | Path) -> Sheet:
     try:
         # dtype=str jest obowiązkowe: bez tego akronim "0156" zamieni się w liczbę 156,
         # a numer telefonu w liczbę zmiennoprzecinkową.
-        frame = pd.read_excel(
-            path, sheet_name=0, header=None, dtype=str, engine=engine
-        )
-    except Exception as exc:  # noqa: BLE001 — komunikat trafia do użytkownika
+        frame = pd.read_excel(path, sheet_name=0, header=None, dtype=str, engine=engine)
+    except Exception as exc:
         raise ImportError_(f"Nie udało się otworzyć pliku: {exc}") from exc
 
     if frame.empty:
@@ -148,9 +149,7 @@ def read_sheet(path: str | Path) -> Sheet:
     for _, series in frame.iloc[header_row + 1 :].iterrows():
         rows.append([_cell(v) for v in series.tolist()])
 
-    return Sheet(
-        columns=columns, rows=rows, header_row=header_row, unmapped=unmapped
-    )
+    return Sheet(columns=columns, rows=rows, header_row=header_row, unmapped=unmapped)
 
 
 def _find_headers(frame: pd.DataFrame) -> tuple[int, dict[str, int], list[str]]:
@@ -314,15 +313,9 @@ def build_preview(path: str | Path) -> Preview:
 
     non_empty = [row for row in parsed if not row.empty]
 
-    bad_phones = sum(
-        1 for row in non_empty for phone in row.phones if not phone.is_valid
-    )
+    bad_phones = sum(1 for row in non_empty for phone in row.phones if not phone.is_valid)
     rows_without_phone = sum(1 for row in non_empty if not row.valid_phones)
-    bad_nips = sum(
-        1
-        for row in non_empty
-        if row.raw.get("nip") and not row.nip_valid
-    )
+    bad_nips = sum(1 for row in non_empty if row.raw.get("nip") and not row.nip_valid)
     bad_postals = sum(
         1
         for row in non_empty
@@ -377,7 +370,9 @@ def _count_possible_duplicates(rows: list[ParsedRow]) -> int:
     Liczy zarówno kolizje wewnątrz pliku, jak i trafienia w istniejącą bazę —
     po NIP-ie i po numerze telefonu.
     """
-    nips = [r.values.get("nip") for r in rows if r.nip_valid and r.values.get("nip")]
+    # Walrus zawęża typ: bez niego element listy pozostaje `Any | None`,
+    # mimo że warunek odsiewa puste wartości.
+    nips: list[str] = [nip for r in rows if r.nip_valid and (nip := r.values.get("nip"))]
     phones = [p.e164 for r in rows for p in r.valid_phones if p.e164]
 
     counted = 0
@@ -432,18 +427,18 @@ def run_import(job_id: int, progress_every: int = 25) -> dict[str, Any]:
         stats = _apply_rows(job, parsed, progress_every)
 
         job.status = ImportStatus.DONE
-        job.finished_at = datetime.now(timezone.utc)
+        job.finished_at = datetime.now(UTC)
         job.report = stats
         db.session.commit()
         return stats
 
-    except Exception as exc:  # noqa: BLE001 — błąd musi trafić do UI, nie do logu
+    except Exception as exc:
         db.session.rollback()
         job = db.session.get(ImportJob, job_id)
         if job is not None:
             job.status = ImportStatus.FAILED
             job.error = str(exc)
-            job.finished_at = datetime.now(timezone.utc)
+            job.finished_at = datetime.now(UTC)
             db.session.commit()
         raise
 
@@ -468,9 +463,7 @@ def _apply_rows(
         client = None
         acronym = row.values.get("acronym")
         if acronym:
-            client = db.session.scalar(
-                sa.select(Client).where(Client.acronym == acronym)
-            )
+            client = db.session.scalar(sa.select(Client).where(Client.acronym == acronym))
 
         if client is not None:
             if _update_client(client, row):
@@ -595,7 +588,7 @@ def _update_client(client: Client, row: ParsedRow) -> bool:
     if not changes:
         return False
 
-    client.updated_at = datetime.now(timezone.utc)
+    client.updated_at = datetime.now(UTC)
     db.session.add(
         Activity(
             client_id=client.id,

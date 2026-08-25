@@ -18,7 +18,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from app.services.importer import parse_sheet, read_sheet  # noqa: E402
+from app.services.importer import parse_sheet, read_sheet
 
 
 def main() -> int:
@@ -73,7 +73,7 @@ def main() -> int:
     print(f"  wypełnionych           {len(with_nip):>6}")
     print(f"  poprawnych             {sum(1 for r in with_nip if r.nip_valid):>6}")
     print(f"  błędnych               {sum(1 for r in with_nip if not r.nip_valid):>6}")
-    nips = Counter(r.values['nip'] for r in with_nip if r.nip_valid)
+    nips = Counter(r.values["nip"] for r in with_nip if r.nip_valid)
     print(f"  powtórzonych           {sum(1 for c in nips.values() if c > 1):>6}")
     print()
 

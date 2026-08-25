@@ -4,6 +4,16 @@ from __future__ import annotations
 
 import os
 from datetime import timedelta
+from typing import Any, ClassVar
+
+from dotenv import load_dotenv
+
+# Wartości poniżej czytane są z otoczenia już w ciele klas, czyli w chwili
+# importu tego modułu. Plik .env musi więc trafić do os.environ ZANIM
+# którakolwiek klasa zostanie zdefiniowana — inaczej konfiguracja po cichu
+# spada na wartości domyślne. Polecenie `flask` wczytuje .env samo, ale
+# pytest, gunicorn i `python wsgi.py` już nie, więc robimy to tutaj.
+load_dotenv()
 
 
 def _database_url() -> str:
@@ -27,7 +37,7 @@ class Config:
 
     SQLALCHEMY_DATABASE_URI = _database_url()
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SQLALCHEMY_ENGINE_OPTIONS = {
+    SQLALCHEMY_ENGINE_OPTIONS: ClassVar[dict[str, Any]] = {
         "pool_pre_ping": True,  # Railway ubija bezczynne połączenia
         "pool_recycle": 1800,
     }
@@ -111,5 +121,6 @@ CONFIGS = {"development": DevConfig, "testing": TestConfig, "production": ProdCo
 
 
 def get_config(name: str | None = None) -> type[Config]:
-    name = name or os.environ.get("FLASK_ENV", "development")
-    return CONFIGS.get(name, DevConfig)
+    # Wyrażenie warunkowe, nie `or` — przy `or` mypy zostawia typ `str | None`.
+    resolved = name if name else os.environ.get("FLASK_ENV", "development")
+    return CONFIGS.get(resolved, DevConfig)

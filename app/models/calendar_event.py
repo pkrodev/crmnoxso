@@ -56,8 +56,8 @@ class CalendarEvent(db.Model):
         sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()
     )
 
-    client: Mapped["Client | None"] = relationship(back_populates="events")
-    transcript: Mapped["Transcript | None"] = relationship(back_populates="events")
+    client: Mapped[Client | None] = relationship(back_populates="events")
+    transcript: Mapped[Transcript | None] = relationship(back_populates="events")
 
     def __repr__(self) -> str:
         return f"<CalendarEvent {self.id} {self.title!r}>"

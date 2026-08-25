@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block title %}Nowy klient · {{ app_name }}{% endblock %}
+{% block heading %}Nowy klient{% endblock %}
+
+{% block subheading %}
+  <p class="text-xs text-ink-500 mt-0.5">
+    Wystarczy nazwa — resztę uzupełnisz w panelu klienta.
+  </p>
+{% endblock %}
+
+{% block content %}
+<form method="post" class="card max-w-2xl">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token_value }}">
+
+  <div class="card-body grid gap-3 sm:grid-cols-2">
+    <div class="sm:col-span-2">
+      <label class="label" for="pole-nazwa">Nazwa *</label>
+      <input id="pole-nazwa" class="input" name="name" required autofocus
+             value="{{ form.get('name', '') }}"
+             placeholder="Gospodarstwo Rolne Kowalski Jan">
+    </div>
+
+    <div>
+      <label class="label" for="pole-akronim">Akronim</label>
+      <input id="pole-akronim" class="input" name="acronym"
+             value="{{ form.get('acronym', '') }}" placeholder="10009">
+      <p class="text-xs text-ink-500 mt-1">Wiodące zera mają znaczenie.</p>
+    </div>
+
+    <div>
+      <label class="label" for="pole-nip">NIP</label>
+      <input id="pole-nip" class="input" name="nip"
+             value="{{ form.get('nip', '') }}" placeholder="617-101-01-49">
+    </div>
+
+    <div>
+      <label class="label" for="pole-miasto">Miasto</label>
+      <input id="pole-miasto" class="input" name="city" value="{{ form.get('city', '') }}">
+    </div>
+
+    <div>
+      <label class="label" for="pole-kod">Kod pocztowy</label>
+      <input id="pole-kod" class="input" name="postal_code"
+             value="{{ form.get('postal_code', '') }}" placeholder="63-330">
+    </div>
+
+    <div class="sm:col-span-2">
+      <label class="label" for="pole-ulica">Ulica</label>
+      <input id="pole-ulica" class="input" name="street" value="{{ form.get('street', '') }}">
+    </div>
+
+    <div>
+      <label class="label" for="pole-email">E-mail</label>
+      <input id="pole-email" class="input" type="email" name="email"
+             value="{{ form.get('email', '') }}">
+    </div>
+
+    <div>
+      <label class="label" for="pole-telefon">Telefon</label>
+      <input id="pole-telefon" class="input" name="phone"
+             value="{{ form.get('phone', '') }}" placeholder="601 092 947">
+    </div>
+  </div>
+
+  <div class="px-4 pb-4 flex items-center gap-2">
+    <button type="submit" class="btn-primary">Dodaj klienta</button>
+    <a href="{{ url_for('clients.index') }}" class="btn-secondary">Anuluj</a>
+  </div>
+</form>
+{% endblock %}

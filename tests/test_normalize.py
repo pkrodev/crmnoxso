@@ -234,7 +234,12 @@ def test_city_case_variants_collapse_to_one_key() -> None:
 
 @pytest.mark.parametrize(
     ("raw", "expected"),
-    [("63-330", "63-330"), ("63330", "63-330"), ("62-820", "62-820"), (" 64980 ", "64-980")],
+    [
+        ("63-330", "63-330"),
+        ("63330", "63-330"),
+        ("62-820", "62-820"),
+        (" 64980 ", "64-980"),
+    ],
 )
 def test_normalize_postal_valid(raw: str, expected: str) -> None:
     assert normalize_postal(raw).value == expected

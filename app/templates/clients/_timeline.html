@@ -1,0 +1,95 @@
+{#
+  Oś czasu klienta — notatki, zmiany danych, tagi, a od kolejnych etapów także
+  SMS-y, rozmowy i wydarzenia. Wpisy wygenerowane przez AI są odróżnione
+  wizualnie (bursztynowa, przerywana obwódka), żeby nie myliły się z ręcznymi.
+#}
+<div id="os-czasu">
+
+  <form class="card mb-3"
+        hx-post="{{ url_for('clients.note_add', client_id=client.id) }}"
+        hx-target="#os-czasu" hx-swap="outerHTML"
+        hx-on::after-request="this.reset()">
+    <div class="card-body">
+      <label class="label" for="tresc-notatki">Dodaj notatkę</label>
+      <textarea id="tresc-notatki" class="input" name="body" rows="2"
+                placeholder="Co ustaliliście?"></textarea>
+      <div class="flex items-center gap-3 mt-2">
+        <label class="flex items-center gap-1.5 text-sm text-ink-700">
+          <input type="checkbox" name="pinned" value="1"> przypnij
+        </label>
+        <button type="submit" class="btn-primary ml-auto">Zapisz notatkę</button>
+      </div>
+      {% if error %}<p class="field-error">{{ error }}</p>{% endif %}
+    </div>
+  </form>
+
+  {# Zdarzenie ręczne: „wysłano ofertę pocztą", „spotkanie na targach" #}
+  <details class="card mb-3">
+    <summary class="px-4 py-2 text-sm text-ink-700 cursor-pointer select-none">
+      Dodaj akcję ręcznie
+    </summary>
+    <form class="card-body pt-0"
+          hx-post="{{ url_for('clients.activity_add', client_id=client.id) }}"
+          hx-target="#os-czasu" hx-swap="outerHTML"
+          hx-on::after-request="this.reset()">
+      <input class="input mb-2" name="title" placeholder="np. wysłano ofertę pocztą"
+             maxlength="300" autocomplete="off">
+      <textarea class="input" name="description" rows="2" placeholder="szczegóły (opcjonalnie)"></textarea>
+      <button type="submit" class="btn-secondary mt-2">Dopisz do osi czasu</button>
+    </form>
+  </details>
+
+  {% if pinned %}
+    <div class="mb-3">
+      <p class="section-title mb-1.5">Przypięte</p>
+      {% for note in pinned %}
+        <div class="card mb-1.5 border-amber-200 bg-amber-50">
+          <div class="card-body py-2">
+            <p class="text-sm text-ink-900 whitespace-pre-line">{{ note.body }}</p>
+            <p class="text-xs text-ink-500 mt-1">{{ note.created_at | datetime_pl }}</p>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <p class="section-title mb-1.5">Historia kontaktu</p>
+
+  {% if timeline %}
+    <ol class="relative border-l border-ink-200 ml-1.5">
+      {% for entry in timeline %}
+        {% set is_ai = entry.actor.value == 'AI' %}
+        <li class="ml-4 pb-3">
+          <span class="absolute -left-1.5 mt-1.5 w-3 h-3 rounded-full border-2 border-white
+                       {{ 'bg-amber-500' if is_ai else 'bg-ink-200' }}"></span>
+
+          <div class="card {{ 'border-dashed border-amber-600 bg-amber-50' if is_ai }}">
+            <div class="card-body py-2">
+              <div class="flex items-start gap-2">
+                <span class="text-sm font-medium text-ink-900 flex-1">{{ entry.title }}</span>
+                {% if is_ai %}<span class="badge-brand shrink-0">AI</span>{% endif %}
+                <span class="text-xs text-ink-500 shrink-0"
+                      title="{{ entry.occurred_at | datetime_pl }}">
+                  {{ entry.occurred_at | relative_pl }}
+                </span>
+              </div>
+
+              {% if entry.description %}
+                <p class="text-sm text-ink-700 mt-1 whitespace-pre-line">{{ entry.description }}</p>
+              {% endif %}
+
+              <p class="text-xs text-ink-500 mt-1">
+                {{ activity_labels[entry.type.value] }}
+              </p>
+            </div>
+          </div>
+        </li>
+      {% endfor %}
+    </ol>
+  {% else %}
+    <div class="card"><div class="card-body py-6 text-center text-sm text-ink-500">
+      Nic tu jeszcze nie ma.
+    </div></div>
+  {% endif %}
+
+</div>

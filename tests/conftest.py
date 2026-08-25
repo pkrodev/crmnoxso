@@ -10,9 +10,12 @@ import pytest
 os.environ.setdefault("FLASK_ENV", "testing")
 os.environ.setdefault("ADMIN_LOGIN", "Milosz")
 # Hash hasła "testowe-haslo-123" — tylko na potrzeby testów.
+# Wartość wygenerowana bcryptem i zweryfikowana; poprzednia była wpisana
+# „na oko" i nie pasowała do żadnego hasła, przez co logowanie w testach
+# nie mogło się udać.
 os.environ.setdefault(
     "ADMIN_PASSWORD_HASH",
-    "$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewKyF9aQ2Zx3nGJa",
+    "$2b$12$qGB61kXJkbTk1033raKvF.i35kw/7gayQU8JMIqhmEKZaPLd1xozq",
 )
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -30,7 +33,7 @@ def app():
         try:
             db.drop_all()
             db.create_all()
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             pytest.skip(f"Brak połączenia z bazą testową: {exc}")
 
     yield application

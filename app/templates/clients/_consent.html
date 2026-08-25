@@ -1,0 +1,18 @@
+{#
+  Zgoda na SMS marketingowy. Kreator kampanii (etap 7) domyślnie filtruje
+  odbiorców po tym polu — wysyłka marketingowa bez zgody jest w Polsce
+  niedozwolona (Prawo komunikacji elektronicznej).
+#}
+<div id="zgoda-sms" class="flex items-center gap-2">
+  <label class="flex items-center gap-1.5 text-sm text-ink-900">
+    <input type="checkbox" name="consent" value="1"
+           {{ 'checked' if client.sms_consent }}
+           hx-post="{{ url_for('clients.sms_consent_set', client_id=client.id) }}"
+           hx-target="#zgoda-sms" hx-swap="outerHTML"
+           hx-trigger="change">
+    Zgoda na SMS
+  </label>
+  {% if client.sms_consent and client.sms_consent_at %}
+    <span class="text-xs text-ink-500">od {{ client.sms_consent_at | date_pl }}</span>
+  {% endif %}
+</div>

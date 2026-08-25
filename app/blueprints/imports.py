@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import sqlalchemy as sa
@@ -14,7 +14,6 @@ from flask import (
     flash,
     redirect,
     render_template,
-    request,
     url_for,
 )
 from flask_wtf import FlaskForm
@@ -91,7 +90,7 @@ def preview(job_id: int):
     except ImportError_ as exc:
         job.status = ImportStatus.FAILED
         job.error = str(exc)
-        job.finished_at = datetime.now(timezone.utc)
+        job.finished_at = datetime.now(UTC)
         db.session.commit()
         flash(str(exc), "error")
         return redirect(url_for("imports.index"))

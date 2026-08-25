@@ -47,7 +47,7 @@ class Activity(db.Model):
         sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()
     )
 
-    client: Mapped["Client"] = relationship(back_populates="activities")
+    client: Mapped[Client] = relationship(back_populates="activities")
 
     __table_args__ = (
         sa.Index("ix_activities_client_occurred", "client_id", "occurred_at"),

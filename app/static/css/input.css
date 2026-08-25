@@ -35,6 +35,12 @@
     @apply bg-ink-50 text-ink-900 font-sans antialiased;
   }
 
+  /* Alpine podstawia zawartość dopiero po starcie. Bez tej reguły element
+     z `x-show` mignąłby na ekranie, zanim skrypt zdąży go schować. */
+  [x-cloak] {
+    display: none !important;
+  }
+
   /* Tabelaryczne cyfry — kolumny z kwotami i numerami mają się zgadzać w pionie */
   td,
   th {

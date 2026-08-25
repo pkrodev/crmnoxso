@@ -32,6 +32,7 @@ ROOT = Path(__file__).resolve().parent.parent
 SOURCE = ROOT / "logo.png"
 TARGET_DIR = ROOT / "app" / "static" / "img"
 
+
 def _is_amber(r: int, g: int, b: int) -> bool:
     """Czy piksel należy do bursztynu marki (#FFAF00) lub jego antyaliasingu."""
     return r > 180 and 90 < g < 230 and b < 90

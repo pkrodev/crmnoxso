@@ -229,9 +229,7 @@ def normalize_nip(raw: str | None) -> FieldResult:
     digits = re.sub(r"\D", "", text)
 
     if not digits:
-        return FieldResult(
-            value=None, warnings=[f"NIP bez cyfr: {text!r}"], valid=False
-        )
+        return FieldResult(value=None, warnings=[f"NIP bez cyfr: {text!r}"], valid=False)
     if len(digits) != 10:
         return FieldResult(
             value=digits,

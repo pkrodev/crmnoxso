@@ -1,0 +1,27 @@
+{# Tagi klienta — dodawanie i usuwanie w miejscu, bez przeładowania strony. #}
+<div id="tagi">
+  <div class="flex flex-wrap items-center gap-1.5">
+    {% for tag in client.tags %}
+      <span class="badge-soft inline-flex items-center gap-1">
+        {{ tag.name }}
+        <button type="button" class="text-ink-500 hover:text-danger leading-none"
+                title="Usuń tag"
+                hx-delete="{{ url_for('clients.tag_delete', client_id=client.id, tag_id=tag.id) }}"
+                hx-target="#tagi" hx-swap="outerHTML">×</button>
+      </span>
+    {% else %}
+      <span class="text-sm text-ink-500">Brak tagów.</span>
+    {% endfor %}
+  </div>
+
+  <form class="flex items-center gap-1.5 mt-2"
+        hx-post="{{ url_for('clients.tag_add', client_id=client.id) }}"
+        hx-target="#tagi" hx-swap="outerHTML"
+        hx-on::after-request="this.reset()">
+    <input class="input py-1" name="tag" placeholder="nowy tag" autocomplete="off"
+           list="znane-tagi" maxlength="64">
+    <button type="submit" class="btn-secondary py-1 shrink-0">Dodaj</button>
+  </form>
+
+  {% if error %}<p class="field-error">{{ error }}</p>{% endif %}
+</div>

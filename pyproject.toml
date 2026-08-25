@@ -30,6 +30,14 @@ exclude = ["\\.venv", "migrations", "wheels"]
 module = ["app.blueprints.*", "app.templates.*"]
 disable_error_code = ["misc"]
 
+# Modele dziedziczą po `db.Model`, czyli po klasie, którą Flask-SQLAlchemy tworzy
+# dopiero w czasie działania programu (`FlaskSQLAlchemyBase`). Statycznie takiej
+# nazwy nie da się rozwiązać i mypy zgłasza `name-defined` w każdym modelu.
+# Wyłączamy wyłącznie ten jeden kod błędu i wyłącznie w pakiecie modeli.
+[[tool.mypy.overrides]]
+module = ["app.models.*"]
+disable_error_code = ["name-defined"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q --strict-markers"

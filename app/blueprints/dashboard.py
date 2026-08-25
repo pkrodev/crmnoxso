@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import sqlalchemy as sa
 from flask import Blueprint, render_template
@@ -23,12 +23,10 @@ bp = Blueprint("dashboard", __name__)
 
 @bp.route("/")
 def index():
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
-    total_clients = db.session.scalar(
-        sa.select(sa.func.count()).select_from(Client)
-    )
+    total_clients = db.session.scalar(sa.select(sa.func.count()).select_from(Client))
     new_this_month = db.session.scalar(
         sa.select(sa.func.count())
         .select_from(Client)

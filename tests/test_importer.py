@@ -50,10 +50,30 @@ def test_columns_are_mapped_by_header_not_position(tmp_path: Path) -> None:
         path,
         [
             [None, *HEADERS],
-            ["48601092947", *_row("0156", "DOBRZYCA", "617-101-01-49", "63-330",
-                                  "Karmin", "+48627414846", "Przedsiębiorstwo Rolne")],
-            ["48698394664", *_row("10009", "Czajków", "5140006040", "63-524",
-                                  "Salomony 50", "627311566", "Gabryś Ewa i Jerzy")],
+            [
+                "48601092947",
+                *_row(
+                    "0156",
+                    "DOBRZYCA",
+                    "617-101-01-49",
+                    "63-330",
+                    "Karmin",
+                    "+48627414846",
+                    "Przedsiębiorstwo Rolne",
+                ),
+            ],
+            [
+                "48698394664",
+                *_row(
+                    "10009",
+                    "Czajków",
+                    "5140006040",
+                    "63-524",
+                    "Salomony 50",
+                    "627311566",
+                    "Gabryś Ewa i Jerzy",
+                ),
+            ],
         ],
     )
 
@@ -80,7 +100,14 @@ def test_ignored_columns_are_not_mapped(tmp_path: Path) -> None:
 
     sheet = read_sheet(path)
     assert set(sheet.columns) == {
-        "acronym", "city", "nip", "postal_code", "street", "phone", "name", "email"
+        "acronym",
+        "city",
+        "nip",
+        "postal_code",
+        "street",
+        "phone",
+        "name",
+        "email",
     }
 
 
@@ -123,8 +150,15 @@ def test_row_with_two_numbers_in_one_cell(tmp_path: Path) -> None:
         path,
         [
             HEADERS,
-            _row("10017", "Pyzdry", "7891495744", "62-310", "ul. Farna 38a",
-                 "606420728   632767173", "FHU Wrzaskowski Karol"),
+            _row(
+                "10017",
+                "Pyzdry",
+                "7891495744",
+                "62-310",
+                "ul. Farna 38a",
+                "606420728   632767173",
+                "FHU Wrzaskowski Karol",
+            ),
         ],
     )
 
@@ -143,6 +177,12 @@ def test_leading_zero_in_acronym_survives(tmp_path: Path) -> None:
 
 
 def test_empty_row_is_marked_not_dropped(tmp_path: Path) -> None:
+    """Pusty wiersz ROZDZIELAJĄCY dane jest oznaczany, nie wycinany.
+
+    Wiersz pusty musi mieć następcę z danymi — pusty wiersz na samym końcu
+    arkusza nie istnieje na poziomie pliku (openpyxl nie zapisuje komórek,
+    a pandas czyta tylko do ostatniej niepustej), więc nie dotarłby tu wcale.
+    """
     from app.services.importer import parse_sheet, read_sheet
 
     path = tmp_path / "pusty.xlsx"
@@ -152,12 +192,13 @@ def test_empty_row_is_marked_not_dropped(tmp_path: Path) -> None:
             HEADERS,
             _row("0156", "Kalisz", None, None, None, None, "Klient"),
             [None] * len(HEADERS),
+            _row("0157", "Pleszew", None, None, None, None, "Klient po przerwie"),
         ],
     )
 
     rows = parse_sheet(read_sheet(path))
-    assert rows[0].empty is False
-    assert rows[1].empty is True
+    assert [row.empty for row in rows] == [False, True, False]
+    assert rows[2].values["acronym"] == "0157"
 
 
 def test_bad_values_produce_warnings_but_keep_the_row(tmp_path: Path) -> None:
@@ -167,8 +208,18 @@ def test_bad_values_produce_warnings_but_keep_the_row(tmp_path: Path) -> None:
     path = tmp_path / "smieci.xlsx"
     make_sheet(
         path,
-        [HEADERS, _row("10099", "SOBÓTKA", "3417980RH", "R42XV88", "Gutów 5",
-                       "7649233", "Gospodarstwo Rolne Kołodziej Paweł")],
+        [
+            HEADERS,
+            _row(
+                "10099",
+                "SOBÓTKA",
+                "3417980RH",
+                "R42XV88",
+                "Gutów 5",
+                "7649233",
+                "Gospodarstwo Rolne Kołodziej Paweł",
+            ),
+        ],
     )
 
     row = parse_sheet(read_sheet(path))[0]
@@ -210,10 +261,25 @@ def test_import_creates_clients_with_phones(session, job_factory) -> None:
 
     job = job_factory(
         [
-            _row("0156", "DOBRZYCA", "617-101-01-49", "63-330", "Karmin",
-                 "+48627414846", "Przedsiębiorstwo Rolne Taczanów", "hodowla@osw.pl"),
-            _row("10017", "Pyzdry", "7891495744", "62-310", "ul. Farna 38a",
-                 "606420728   632767173", "FHU Wrzaskowski Karol"),
+            _row(
+                "0156",
+                "DOBRZYCA",
+                "617-101-01-49",
+                "63-330",
+                "Karmin",
+                "+48627414846",
+                "Przedsiębiorstwo Rolne Taczanów",
+                "hodowla@osw.pl",
+            ),
+            _row(
+                "10017",
+                "Pyzdry",
+                "7891495744",
+                "62-310",
+                "ul. Farna 38a",
+                "606420728   632767173",
+                "FHU Wrzaskowski Karol",
+            ),
         ]
     )
 
@@ -238,8 +304,17 @@ def test_reimport_updates_instead_of_duplicating(session, job_factory) -> None:
     from app.models import Client
     from app.services.importer import run_import
 
-    rows = [_row("0156", "Dobrzyca", "617-101-01-49", "63-330", "Karmin",
-                 "627414846", "Przedsiębiorstwo Rolne")]
+    rows = [
+        _row(
+            "0156",
+            "Dobrzyca",
+            "617-101-01-49",
+            "63-330",
+            "Karmin",
+            "627414846",
+            "Przedsiębiorstwo Rolne",
+        )
+    ]
 
     first = run_import(job_factory(rows, "pierwszy.xlsx").id)
     second = run_import(job_factory(rows, "drugi.xlsx").id)
@@ -339,8 +414,11 @@ def test_duplicate_nip_does_not_merge_clients(session, job_factory) -> None:
     )
 
     assert session.query(Client).count() == 2
-    assert session.query(Client).filter_by(acronym="0157").one().has_tag(
-        TAG_POSSIBLE_DUPLICATE
+    assert (
+        session.query(Client)
+        .filter_by(acronym="0157")
+        .one()
+        .has_tag(TAG_POSSIBLE_DUPLICATE)
     )
 
 

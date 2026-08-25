@@ -3,23 +3,34 @@
 Jednoosobowy CRM dla firmy NOXSO (branża rolnicza, Wielkopolska).
 Specyfikacja projektu: [`CLAUDE.md`](CLAUDE.md).
 
-Stan prac: **etapy 1–2** (fundament + import z normalizacją). Etapy 3–8 —
-klienci, transkrypcje, AI, kalendarz, SMS, ustawienia — dopiero przed nami.
+Stan prac: **etapy 1–3** (fundament, import z normalizacją, ekran klientów),
+uruchomione i sprawdzone na prawdziwej bazie 1923 kontrahentów.
+Etapy 4–8 — transkrypcje, AI, kalendarz, SMS, ustawienia — przed nami.
 
 ---
 
 ## Uruchomienie od zera
 
-### 1. PostgreSQL 16
+### 1. PostgreSQL
 
-Instalator: <https://www.enterprisedb.com/downloads/postgres-postgresql-downloads>
-→ *PostgreSQL 16.x, Windows x86-64*. Podczas instalacji zapamiętaj hasło
-użytkownika `postgres`, port zostaw `5432`, Stack Buildera na końcu pomiń.
+Najprościej przez winget — instaluje się bez klikania i bez okna UAC:
+
+```powershell
+winget install --id PostgreSQL.PostgreSQL.17 -e --silent `
+  --custom "--superpassword TWOJE_HASLO --serverport 5432"
+```
+
+Alternatywnie instalator z <https://www.enterprisedb.com/downloads/postgres-postgresql-downloads>
+(Windows x86-64). Port zostaw `5432`, Stack Buildera na końcu pomiń.
+
+> Specyfikacja mówi o PostgreSQL 16, ale ta wersja zniknęła już z winget —
+> dostępne są 17 i 18. Używamy **17**. Nic w kodzie nie zależy od konkretnej
+> wersji major, a Railway również daje 17.
 
 Bazy zakładasz raz:
 
 ```powershell
-& "C:\Program Files\PostgreSQL\16\bin\psql.exe" -U postgres -f scripts\create_db.sql
+& "C:\Program Files\PostgreSQL\17\bin\psql.exe" -U postgres -f scripts\create_db.sql
 ```
 
 ### 2. Środowisko Pythona
@@ -53,7 +64,21 @@ W pliku `.env` uzupełnij:
 
 Hasła w postaci jawnej nie zapisujemy nigdzie — ani w kodzie, ani w `.env`.
 
-### 4. Baza i style
+### 4. Tailwind CLI
+
+Standalone binarka, jeden plik, bez Node'a i bez npm. Pobierasz raz — katalog
+`tools\` jest poza repozytorium, bo waży 40 MB:
+
+```powershell
+New-Item -ItemType Directory -Force tools | Out-Null
+Invoke-WebRequest -OutFile tools\tailwindcss.exe `
+  https://github.com/tailwindlabs/tailwindcss/releases/download/v3.4.17/tailwindcss-windows-x64.exe
+```
+
+Zbudowany `app/static/css/tailwind.css` **jest** commitowany — Railway nie ma
+czym go zbudować. Po zmianach w szablonach przebuduj go i zacommituj na nowo.
+
+### 5. Baza i style
 
 ```powershell
 $env:FLASK_APP = "wsgi.py"
@@ -61,7 +86,7 @@ $env:FLASK_APP = "wsgi.py"
 .\scripts\build_css.ps1
 ```
 
-### 5. Start
+### 6. Start
 
 ```powershell
 .venv\Scripts\flask.exe run --debug
@@ -102,6 +127,45 @@ Podgląd normalizacji bez dotykania bazy:
 ```powershell
 .venv\Scripts\python.exe scripts\check_normalization.py "poprawiona baza klientów do dnia 01.03.2022r (1).xlsx"
 ```
+
+---
+
+## Klienci
+
+Lista pod `/clients`, panel klienta pod `/clients/<id>`.
+
+**Wyszukiwarka szuka jednocześnie po nazwie, akronimie, mieście, NIP-ie,
+adresie e-mail i telefonie.** Numer znajdziesz w dowolnym zapisie —
+`227503859`, `227-503-859`, `227 503 859`, `+48227503859` i `48227503859`
+dają ten sam wynik. Porównujemy też same cyfry kolumny `Phone.raw`, dzięki
+czemu odnajdują się również numery, których nie dało się sparsować
+(te z `e164 = NULL`).
+
+Filtry: miasto, tag, status, ma-email, ma-telefon. Stronicowanie po 50 rekordów,
+po stronie serwera. Wszystko przez HTMX — wpisanie znaku w wyszukiwarce
+podmienia samą tabelę, adres w pasku przeglądarki aktualizuje się sam,
+więc wynik wyszukiwania da się zabookmarkować i odświeżyć.
+
+W panelu klienta **każde pole edytuje się w miejscu**: kliknięcie zamienia
+tekst na pole formularza (`hx-get`), zapis wraca gotowym fragmentem (`hx-put`).
+Bez przeładowania strony i bez linijki własnego JavaScriptu.
+
+Dwie rzeczy warte zapamiętania:
+
+- **Ręczna edycja normalizuje tak samo jak import.** Wpisane `SOBÓTKA` zapisze
+  się jako `Sobótka`. Bez tego ręczne wpisy rozjechałyby się z zaimportowanymi
+  i zrobiły dwa miasta w filtrze.
+- **Błędna wartość nie czyści pola.** Zły adres e-mail albo kod pocztowy
+  zostaje odrzucony z komunikatem, a poprzednia wartość zostaje nietknięta.
+  Wyjątkiem jest NIP: cyfry zapisujemy, ale oznaczamy czerwonym `!`, bo
+  wartość do przejrzenia jest cenniejsza niż puste pole.
+
+Każda zmiana — pola, telefonu, tagu, statusu, zgody SMS — trafia na oś czasu
+klienta jako `Activity`. To wymóg funkcjonalny, nie log techniczny: historia
+kontaktu ma być w jednym miejscu.
+
+Usunięcie klienta wymaga przepisania jego nazwy. Kasuje też notatki, telefony
+i całą oś czasu.
 
 ---
 
@@ -190,10 +254,11 @@ app/
 ├── filters.py           filtry Jinja (daty w Europe/Warsaw, telefony, NIP)
 ├── tasks.py             zadania APSchedulera
 ├── models/              modele SQLAlchemy 2.0
-├── blueprints/          auth, dashboard, imports
+├── blueprints/          auth, dashboard, clients, imports
 ├── services/
 │   ├── normalize.py     telefony, NIP, miasta, kody pocztowe
-│   └── importer.py      odczyt arkusza, deduplikacja, zapis
+│   ├── importer.py      odczyt arkusza, deduplikacja, zapis
+│   └── clients.py       wyszukiwanie, filtry, edycja pól, oś czasu
 ├── templates/
 └── static/
 scripts/                 hash hasła, warianty logo, build CSS, kontrola normalizacji
