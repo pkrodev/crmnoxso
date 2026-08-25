@@ -3,9 +3,17 @@
 {% block heading %}Import bazy klientów{% endblock %}
 
 {% block content %}
+{#
+  `min-w-0` na obu kolumnach jest tu konieczne, nie ozdobne. Element siatki ma
+  domyślnie `min-width: auto`, więc nie zwęzi się poniżej najszerszej
+  nieprzerwanej treści. Nazwa wgranego pliku przechodzi przez `secure_filename`,
+  które zamienia spacje na podkreślenia — z „poprawiona baza klientów.xlsx"
+  robi się jeden 51-znakowy wyraz bez miejsca na złamanie. Taka kolumna
+  rozpychała siatkę i cała strona jechała w poziomie.
+#}
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
-  <div class="lg:col-span-2 space-y-4">
+  <div class="lg:col-span-2 min-w-0 space-y-4">
     <div class="card">
       <div class="card-header">
         <h2 class="section-title">Wgraj arkusz</h2>
@@ -52,11 +60,12 @@
     </div>
   </div>
 
-  <div class="card">
+  <div class="card min-w-0">
     <div class="card-header">
       <h2 class="section-title">Ostatnie importy</h2>
     </div>
     {% if recent %}
+      <div class="overflow-x-auto">
       <table class="table">
         <thead>
           <tr><th>Plik</th><th>Status</th></tr>
@@ -65,7 +74,7 @@
           {% for job in recent %}
             <tr>
               <td>
-                <a class="link" href="{{ url_for('imports.progress', job_id=job.id) }}">{{ job.filename }}</a>
+                <a class="link break-all" href="{{ url_for('imports.progress', job_id=job.id) }}">{{ job.filename }}</a>
                 <div class="text-xs text-ink-500">{{ job.created_at | datetime_pl }}</div>
               </td>
               <td>
@@ -77,6 +86,7 @@
           {% endfor %}
         </tbody>
       </table>
+      </div>
     {% else %}
       <div class="card-body text-ink-500">Jeszcze nic nie importowano.</div>
     {% endif %}

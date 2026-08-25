@@ -3,9 +3,9 @@
 Jednoosobowy CRM dla firmy NOXSO (branża rolnicza, Wielkopolska).
 Specyfikacja projektu: [`CLAUDE.md`](CLAUDE.md).
 
-Stan prac: **etapy 1–4** (fundament, import z normalizacją, ekran klientów,
-transkrypcje rozmów), uruchomione i sprawdzone na prawdziwej bazie
-1923 kontrahentów. Etapy 5–8 — AI, kalendarz, SMS, ustawienia — przed nami.
+Stan prac: **etapy 1–5** (fundament, import z normalizacją, ekran klientów,
+transkrypcje rozmów, analiza AI), uruchomione i sprawdzone na prawdziwej bazie
+1923 kontrahentów. Etapy 6–8 — kalendarz, SMS, ustawienia — przed nami.
 
 ---
 
@@ -251,6 +251,60 @@ dopiero po kliknięciu — transkrypcja potrafi mieć kilkanaście tysięcy znak
 
 ---
 
+## Analiza rozmów
+
+Każda rozmowa z przypisanym klientem trafia do modelu (DeepSeek przez SDK
+`openai`), który zwraca podsumowanie, wydźwięk, wynik rozmowy, kluczowe
+ustalenia i terminy do kalendarza. Wymaga `DEEPSEEK_API_KEY` w `.env` — bez
+klucza aplikacja działa normalnie, tylko analiza się nie odpala i mówi o tym
+raz w logu, zamiast zasypywać go co pół minuty.
+
+Rzeczy, które warto znać, zanim się to zmieni:
+
+- **Prompt zawiera dzisiejszą datę wraz z dniem tygodnia.** W rozmowach padają
+  określenia względne („w przyszły wtorek", „za dwa tygodnie"). Bez daty
+  odniesienia model wygeneruje terminy z sufitu, a te wylądują w kalendarzu.
+  Datę bierzemy z czasu polskiego, nie z UTC — o pierwszej w nocy różnią się
+  o dobę.
+- **Odpowiedź jest walidowana Pydantikiem, z tolerancją.** Model bywa uprzejmy
+  i odpowiada „pozytywny" zamiast `positive`, wstawia `"null"` jako napis albo
+  datę z kropkami. Wszystko to sprowadzamy do dozwolonych wartości. Odpowiedź
+  bez podsumowania albo nie-JSON to błąd i ponowna próba.
+- **Wydarzenia z AI nigdy nie są potwierdzone.** Powstają z `confirmed=False`,
+  przerywaną obwódką w interfejsie i pewnością `high` / `medium` / `low`.
+  Niską pewność odnotowujemy dodatkowo w opisie.
+- **Ustalenie bez daty nie trafia do kalendarza.** Zostaje w `ai_raw` i widać
+  je na ekranie rozmowy pod nagłówkiem „Bez ustalonego terminu". Wpisanie
+  wymyślonej daty byłoby gorsze niż brak wpisu.
+- **Nazwę klienta model może uzupełnić tylko wtedy, gdy jest tymczasowa.**
+  Klientowi założonemu z rozmowy („Nieznany (601 092 947)") nadaje nazwę
+  usłyszaną w rozmowie. Nazwy z arkusza ani wpisanej ręcznie nie tknie.
+- **Podsumowanie dopisujemy do istniejącego wpisu na osi czasu**, zamiast
+  dokładać drugi. Jedna rozmowa to jedna pozycja w historii kontaktu.
+
+### Kolejka i ponawianie
+
+Zadanie APSchedulera chodzi co 30 sekund i bierze porcję rozmów
+(`SELECT ... FOR UPDATE SKIP LOCKED`, `max_instances=1`). Nieudana próba zwiększa
+licznik i odsuwa kolejną o rosnący odstęp — 1, 5 i 15 minut. Po trzeciej rozmowa
+dostaje status `FAILED` i czeka na przycisk „Przetwórz ponownie”.
+
+**Surowy tekst rozmowy zostaje w bazie zawsze**, także po nieudanej analizie.
+
+Rozmowa, która utknie w stanie „Przetwarzanie" (na przykład przez ubicie procesu
+w trakcie odpytywania modelu), wraca do kolejki po kwadransie.
+
+Ponowne przetworzenie kasuje wydarzenia **niepotwierdzone**; te, które
+potwierdziłeś, zostają — są już Twoją decyzją, nie modelu.
+
+Panel rozmowy dopytuje o wynik przez HTMX co trzy sekundy, a gdy analiza jest
+gotowa, fragment wraca bez wyzwalacza i odpytywanie samo się kończy.
+
+Zużycie tokenów zapisujemy przy każdej rozmowie; suma miesięczna trafi do
+`/settings` w etapie 8 (`analysis.tokens_used_this_month()`).
+
+---
+
 ## Testy
 
 ```powershell
@@ -258,11 +312,15 @@ dopiero po kliknięciu — transkrypcja potrafi mieć kilkanaście tysięcy znak
 .venv\Scripts\python.exe -m pytest -m "not db"  # bez bazy danych
 ```
 
-Testami objęte są miejsca, w których błąd po cichu zepsułby 2000 rekordów:
-normalizacja telefonów, NIP-ów, miast i kodów pocztowych, mapowanie kolumn
-i deduplikacja w importerze, wyszukiwanie po numerze oraz wyłuskiwanie numeru
-z treści rozmowy i autoryzacja endpointu transkrypcji. Przypadki testowe
-pochodzą z prawdziwego pliku.
+Testami objęte są miejsca, w których błąd po cichu zepsułby 2000 rekordów albo
+kosztowałby realne pieniądze: normalizacja telefonów, NIP-ów, miast i kodów
+pocztowych, mapowanie kolumn i deduplikacja w importerze, wyszukiwanie po
+numerze, wyłuskiwanie numeru z treści rozmowy, autoryzacja endpointu
+transkrypcji oraz parsowanie odpowiedzi modelu wraz z przeliczaniem terminów
+na UTC. Przypadki testowe pochodzą z prawdziwego pliku.
+
+Testy AI **nie ruszają sieci** — dostawca modelu jest podstawiany, więc nic
+nie kosztują i działają bez klucza API.
 
 Jakość kodu:
 
@@ -345,6 +403,8 @@ app/
 │   ├── clients.py       wyszukiwanie, filtry, edycja pól, oś czasu
 │   ├── matching.py      numer z treści rozmowy → klient
 │   ├── transcripts.py   lista rozmów, zakładki, liczniki
+│   ├── ai.py            prompt, dostawca modelu, walidacja odpowiedzi
+│   ├── analysis.py      kolejka analizy, wydarzenia, ponawianie
 │   └── paging.py        stronicowanie wspólne dla list
 ├── templates/
 └── static/

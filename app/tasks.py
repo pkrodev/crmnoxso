@@ -11,11 +11,62 @@ from flask import Flask
 _app: Flask | None = None
 
 
+ANALYSIS_INTERVAL_SECONDS = 30
+
+# Brak klucza do modelu nie jest błędem, tylko stanem konfiguracji — ale wpis
+# w logu co trzydzieści sekund zasypałby wszystko inne. Mówimy o tym raz.
+_warned_about_ai = False
+
+
 def register_jobs(app: Flask, scheduler) -> None:
     """Podpina zadania cykliczne. Import jest zadaniem jednorazowym, dokładanym w locie."""
     global _app
     _app = app
-    # Etap 5 dołoży tu cykliczne przetwarzanie transkrypcji (co 30 sekund).
+
+    scheduler.add_job(
+        _analyse_transcripts,
+        trigger="interval",
+        seconds=ANALYSIS_INTERVAL_SECONDS,
+        args=[app],
+        id="analyse-transcripts",
+        replace_existing=True,
+        # Jedna instancja naraz: analiza porcji rozmów bywa dłuższa niż odstęp
+        # między uruchomieniami, a drugi przebieg nie miałby czego wziąć.
+        max_instances=1,
+        coalesce=True,
+        misfire_grace_time=ANALYSIS_INTERVAL_SECONDS,
+    )
+
+
+def _analyse_transcripts(app: Flask) -> None:
+    """Cykliczna analiza rozmów oczekujących (etap 5)."""
+    global _warned_about_ai
+    from app.extensions import db
+    from app.services import analysis
+    from app.services.ai import AiNotConfigured, get_provider
+
+    with app.app_context():
+        try:
+            provider = get_provider()
+        except AiNotConfigured as exc:
+            if not _warned_about_ai:
+                app.logger.warning("%s", exc)
+                _warned_about_ai = True
+            return
+        except Exception:
+            app.logger.exception("Nie udało się zbudować dostawcy AI")
+            return
+
+        _warned_about_ai = False
+        try:
+            report = analysis.run_pending(provider)
+            if report.processed or report.failed:
+                app.logger.info("Analiza rozmów: %s", report.as_dict())
+        except Exception:
+            app.logger.exception("Przebieg analizy rozmów zakończył się błędem")
+            db.session.rollback()
+        finally:
+            db.session.remove()
 
 
 def enqueue_import(app: Flask, job_id: int) -> None:

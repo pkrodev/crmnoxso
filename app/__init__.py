@@ -129,6 +129,7 @@ def _register_context(app: Flask) -> None:
             IMPORT_STATUS_LABELS,
             TRANSCRIPT_STATUS_LABELS,
         )
+        from app.services.ai import CONFIDENCE_LABELS, SENTIMENT_LABELS
 
         return {
             "csrf_token_value": generate_csrf(),
@@ -137,6 +138,8 @@ def _register_context(app: Flask) -> None:
             "client_status_labels": CLIENT_STATUS_LABELS,
             "transcript_status_labels": TRANSCRIPT_STATUS_LABELS,
             "import_status_labels": IMPORT_STATUS_LABELS,
+            "sentiment_labels": SENTIMENT_LABELS,
+            "confidence_labels": CONFIDENCE_LABELS,
             # Nawigacja wymienia też ekrany z późniejszych etapów — pokazujemy je
             # wyszarzone, dopóki blueprint nie istnieje, zamiast wywalać się
             # na url_for() nieznanego endpointu.

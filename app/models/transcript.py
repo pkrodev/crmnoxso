@@ -52,6 +52,15 @@ class Transcript(db.Model):
         sa.Integer, nullable=False, default=0, server_default="0"
     )
 
+    # Od kiedy wolno podjąć kolejną próbę analizy.
+    #
+    # Specyfikacja wymaga trzech prób z ROSNĄCYM odstępem, a zadanie w tle chodzi
+    # co 30 sekund. Bez zapisania tego momentu w bazie trzy próby spaliłyby się
+    # w półtorej minuty — czyli dokładnie wtedy, gdy dostawca modelu ma chwilową
+    # awarię i warto poczekać. Trzymanie odstępu w pamięci procesu też nie
+    # wchodzi w grę: restart aplikacji kasowałby go do zera.
+    next_attempt_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True))
+
     created_at: Mapped[datetime] = mapped_column(
         sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()
     )

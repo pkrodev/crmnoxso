@@ -21,7 +21,7 @@ from sqlalchemy.orm import selectinload
 
 from app.extensions import db
 from app.models import ActivityActor, ActivityType, Client, Transcript, TranscriptStatus
-from app.services import matching
+from app.services import analysis, matching
 from app.services import transcripts as service
 from app.services.clients import ClientFilters, build_query, log_activity
 
@@ -183,21 +183,32 @@ def unassign(transcript_id: int):
 
 @bp.route("/<int:transcript_id>/przetworz", methods=["POST"])
 def reprocess(transcript_id: int):
-    """Ponowne dopasowanie po numerze.
+    """Ponowne dopasowanie po numerze i ponowna analiza.
 
     Typowy scenariusz: rozmowa przyszła z numeru, którego nie było w bazie,
     użytkownik dopisał numer istniejącemu klientowi i chce, żeby rozmowa
-    trafiła tam, gdzie trzeba. Etap 5 dołoży do tego przycisku ponowną analizę AI.
+    trafiła tam, gdzie trzeba.
+
+    Sama analiza nie dzieje się tutaj — trwa kilkanaście sekund, więc żądanie
+    HTTP by na nią czekało. Czyścimy wynik i licznik prób, a rozmowę bierze
+    zadanie w tle przy najbliższym przebiegu; panel dociąga wynik przez HTMX.
     """
     transcript = _get(transcript_id)
 
     if transcript.client_id is not None:
         matching.detach(transcript)
 
-    transcript.error = None
-    transcript.attempts = 0
+    analysis.reset_for_reprocessing(transcript)
     outcome = matching.resolve(transcript)
     db.session.commit()
 
     flash(outcome.reason or "Rozmowa przetworzona ponownie.", "info")
     return redirect(url_for("transcripts.detail", transcript_id=transcript.id))
+
+
+@bp.route("/<int:transcript_id>/analiza")
+def analysis_card(transcript_id: int):
+    """Karta z wynikiem analizy — odpytywana przez HTMX, dopóki trwa liczenie."""
+    transcript = _get(transcript_id)
+    db.session.refresh(transcript)
+    return render_template("transcripts/_analysis.html", transcript=transcript)

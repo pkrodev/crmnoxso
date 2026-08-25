@@ -1,0 +1,130 @@
+{#
+  Wynik analizy modelem. Fragment, bo dopóki rozmowa czeka w kolejce, panel
+  dopytuje o niego co trzy sekundy i podmienia w miejscu — bez przeładowania
+  strony i bez linijki własnego JavaScriptu. Gdy wynik jest gotowy, wracający
+  fragment nie ma już `hx-trigger`, więc odpytywanie samo się kończy.
+#}
+{% set waiting = transcript.status.value in ('PENDING', 'PROCESSING') %}
+
+<div id="karta-analizy" class="card"
+     {% if waiting %}
+       hx-get="{{ url_for('transcripts.analysis_card', transcript_id=transcript.id) }}"
+       hx-trigger="every 3s"
+       hx-swap="outerHTML"
+     {% endif %}>
+
+  <div class="card-header">
+    <span class="section-title">Analiza</span>
+    {% if transcript.ai_summary %}<span class="badge-brand">AI</span>{% endif %}
+  </div>
+
+  <div class="card-body py-3">
+
+    {% if transcript.ai_summary %}
+      <p class="text-sm text-ink-900 whitespace-pre-line">{{ transcript.ai_summary }}</p>
+
+      <dl class="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-1 mt-3 text-sm">
+        {% if transcript.ai_outcome %}
+          <dt class="text-ink-500">Wynik</dt>
+          <dd class="text-ink-900">{{ transcript.ai_outcome }}</dd>
+        {% endif %}
+        {% if transcript.ai_sentiment %}
+          <dt class="text-ink-500">Wydźwięk</dt>
+          <dd class="text-ink-900">
+            {{ sentiment_labels.get(transcript.ai_sentiment, transcript.ai_sentiment) }}
+          </dd>
+        {% endif %}
+        {% if transcript.tokens_used %}
+          <dt class="text-ink-500">Tokeny</dt>
+          <dd class="text-ink-900">{{ transcript.tokens_used }}</dd>
+        {% endif %}
+      </dl>
+
+      {% set points = (transcript.ai_raw or {}).get('key_points') or [] %}
+      {% if points %}
+        <p class="section-title mt-4 mb-1.5">Ustalenia</p>
+        <ul class="list-disc pl-5 text-sm text-ink-700 space-y-0.5">
+          {% for point in points %}<li>{{ point }}</li>{% endfor %}
+        </ul>
+      {% endif %}
+
+      {# Wydarzenia z AI: przerywana obwódka i przygaszone tło, żeby nie myliły
+         się z tym, co użytkownik potwierdził sam (sekcja 3 specyfikacji). #}
+      {% if transcript.events %}
+        <p class="section-title mt-4 mb-1.5">Terminy z rozmowy</p>
+        <div class="space-y-1.5">
+          {% for event in transcript.events %}
+            <div class="rounded px-3 py-2 text-sm
+                        {{ 'border border-dashed border-amber-600 bg-amber-50' if not event.confirmed
+                           else 'border border-ink-200 bg-white' }}">
+              <div class="flex items-start gap-2">
+                <span class="flex-1 font-medium text-ink-900">{{ event.title }}</span>
+                {% if event.confirmed %}
+                  <span class="badge-success shrink-0">potwierdzone</span>
+                {% else %}
+                  <span class="badge-warning shrink-0">do potwierdzenia</span>
+                {% endif %}
+              </div>
+              <p class="text-ink-700 mt-0.5">
+                {{ event.starts_at | date_long_pl }}
+                {%- if not event.all_day %}, godz. {{ event.starts_at | datetime_pl('%H:%M') }}{% endif %}
+                {%- if event.confidence %}
+                  · {{ confidence_labels.get(event.confidence, event.confidence) }}
+                {%- endif %}
+              </p>
+              {% if event.description %}
+                <p class="text-xs text-ink-500 mt-1 whitespace-pre-line">{{ event.description }}</p>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+        <p class="text-xs text-ink-500 mt-1.5">
+          Potwierdzanie terminów dokłada etap 6 (kalendarz).
+        </p>
+      {% endif %}
+
+      {# Ustalenia, przy których model nie usłyszał daty. Do kalendarza nie
+         trafiają — wstawienie ich tam wymagałoby wymyślenia terminu. #}
+      {% set undated = [] %}
+      {% for item in (transcript.ai_raw or {}).get('events') or [] %}
+        {% if not item.get('date') %}{% set _ = undated.append(item) %}{% endif %}
+      {% endfor %}
+      {% if undated %}
+        <p class="section-title mt-4 mb-1.5">Bez ustalonego terminu</p>
+        <ul class="list-disc pl-5 text-sm text-ink-700 space-y-0.5">
+          {% for item in undated %}
+            <li>{{ item.get('title') or 'Ustalenie z rozmowy' }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+
+      {% if (transcript.ai_raw or {}).get('follow_up_needed') %}
+        <p class="text-sm text-orange-800 mt-3">Rozmowa wymaga kontaktu zwrotnego.</p>
+      {% endif %}
+
+    {% elif transcript.status.value == 'FAILED' %}
+      <p class="text-sm text-danger">Analiza nie powiodła się po {{ transcript.attempts }} próbach.</p>
+      {% if transcript.error %}
+        <p class="text-xs text-ink-500 mt-1 break-words">{{ transcript.error }}</p>
+      {% endif %}
+      <p class="text-sm text-ink-700 mt-2">
+        Zapis rozmowy jest nienaruszony. Użyj „Przetwórz ponownie”, gdy przyczyna minie.
+      </p>
+
+    {% elif transcript.status.value == 'PROCESSING' %}
+      <p class="text-sm text-ink-700">Model analizuje rozmowę…</p>
+
+    {% else %}
+      <p class="text-sm text-ink-500">
+        Rozmowa czeka w kolejce. Zadanie w tle sprawdza kolejkę co 30 sekund,
+        a wynik pojawi się tutaj sam.
+      </p>
+      {% if transcript.attempts %}
+        <p class="text-xs text-ink-500 mt-1">
+          Nieudanych prób: {{ transcript.attempts }}. Kolejna po odczekaniu przerwy.
+        </p>
+      {% endif %}
+    {% endif %}
+
+  </div>
+</div>

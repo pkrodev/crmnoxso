@@ -137,32 +137,7 @@
   {# --- Prawa kolumna: analiza i treść ------------------------------------ #}
   <div class="grid gap-4">
 
-    <div class="card">
-      <div class="card-header">
-        <span class="section-title">Analiza</span>
-        {% if transcript.ai_summary %}<span class="badge-brand">AI</span>{% endif %}
-      </div>
-      <div class="card-body py-3">
-        {% if transcript.ai_summary %}
-          <p class="text-sm text-ink-900 whitespace-pre-line">{{ transcript.ai_summary }}</p>
-          <dl class="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-1 mt-3 text-sm">
-            {% if transcript.ai_outcome %}
-              <dt class="text-ink-500">Wynik</dt>
-              <dd class="text-ink-900">{{ transcript.ai_outcome }}</dd>
-            {% endif %}
-            {% if transcript.ai_sentiment %}
-              <dt class="text-ink-500">Wydźwięk</dt>
-              <dd class="text-ink-900">{{ transcript.ai_sentiment }}</dd>
-            {% endif %}
-          </dl>
-        {% else %}
-          <p class="text-sm text-ink-500">
-            Rozmowa czeka na analizę. Podsumowanie, wydźwięk i wydarzenia
-            w kalendarzu dokłada etap 5.
-          </p>
-        {% endif %}
-      </div>
-    </div>
+    {% include 'transcripts/_analysis.html' %}
 
     <div class="card">
       <div class="card-header">

@@ -307,3 +307,75 @@ def test_stylesheet_is_served_without_login(client, session):
     """
     response = client.get("/static/css/tailwind.css")
     assert response.status_code == 200
+
+
+# ---------------------------------------------------------------------------
+# Karta analizy (etap 5)
+# ---------------------------------------------------------------------------
+
+
+def test_waiting_call_polls_for_its_analysis(logged_in, session, make_transcript):
+    """Dopóki rozmowa czeka w kolejce, panel sam dopytuje o wynik."""
+    transcript = make_transcript("Rozmowa w kolejce.")
+    session.commit()
+
+    body = logged_in.get(f"/transcripts/{transcript.id}").get_data(as_text=True)
+
+    assert 'hx-trigger="every 3s"' in body
+    assert f"/transcripts/{transcript.id}/analiza" in body
+
+
+def test_finished_analysis_stops_the_polling(logged_in, session, make_transcript):
+    """Gotowy wynik wraca bez wyzwalacza — odpytywanie samo się kończy."""
+    from app.models import TranscriptStatus
+
+    transcript = make_transcript("Rozmowa przeanalizowana.")
+    transcript.ai_summary = "Klient prosi o ofertę na siewnik."
+    transcript.ai_sentiment = "positive"
+    transcript.ai_outcome = "zainteresowany"
+    transcript.ai_raw = {"key_points": ["Prosi o ofertę"], "events": []}
+    transcript.status = TranscriptStatus.DONE
+    session.commit()
+
+    body = logged_in.get(f"/transcripts/{transcript.id}/analiza").get_data(as_text=True)
+
+    assert "<html" not in body
+    assert "Klient prosi o ofertę na siewnik." in body
+    assert "Pozytywny" in body
+    assert 'hx-trigger="every 3s"' not in body
+
+
+def test_undated_arrangement_is_shown_but_not_in_the_calendar(
+    logged_in, session, make_transcript
+):
+    from app.models import TranscriptStatus
+
+    transcript = make_transcript("Rozmowa.")
+    transcript.ai_summary = "Ustalenia bez terminu."
+    transcript.ai_raw = {
+        "events": [{"title": "Przegląd kiedyś na jesieni", "date": None}],
+        "key_points": [],
+    }
+    transcript.status = TranscriptStatus.DONE
+    session.commit()
+
+    body = logged_in.get(f"/transcripts/{transcript.id}/analiza").get_data(as_text=True)
+
+    assert "Bez ustalonego terminu" in body
+    assert "Przegląd kiedyś na jesieni" in body
+
+
+def test_failed_analysis_says_the_text_is_safe(logged_in, session, make_transcript):
+    from app.models import TranscriptStatus
+
+    transcript = make_transcript("Rozmowa, której nie udało się przeanalizować.")
+    transcript.status = TranscriptStatus.FAILED
+    transcript.attempts = 3
+    transcript.error = "Model nie odpowiedział: timeout"
+    session.commit()
+
+    body = logged_in.get(f"/transcripts/{transcript.id}").get_data(as_text=True)
+
+    assert "nie powiodła się" in body
+    assert "timeout" in body
+    assert "Rozmowa, której nie udało się przeanalizować." in body
