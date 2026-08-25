@@ -36,6 +36,30 @@ def _post_json(client, token, **payload):
 
 
 # ---------------------------------------------------------------------------
+# Sygnał życia
+# ---------------------------------------------------------------------------
+
+
+def test_healthcheck_needs_no_login_and_no_token(client, session):
+    """Platforma hostingowa odpytuje ten adres bez żadnych poświadczeń."""
+    response = client.get("/api/healthz")
+
+    assert response.status_code == 200
+    body = response.get_json()
+    assert body["status"] == "ok"
+    assert body["database"] is True
+
+
+def test_healthcheck_says_what_is_configured(app, client, session):
+    previous = app.config.get("INGEST_TOKEN")
+    app.config["INGEST_TOKEN"] = ""
+    try:
+        assert client.get("/api/healthz").get_json()["ingest"] is False
+    finally:
+        app.config["INGEST_TOKEN"] = previous
+
+
+# ---------------------------------------------------------------------------
 # Autoryzacja
 # ---------------------------------------------------------------------------
 

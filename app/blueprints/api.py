@@ -13,6 +13,7 @@ import hmac
 import re
 from typing import Any
 
+import sqlalchemy as sa
 from charset_normalizer import from_bytes
 from flask import Blueprint, current_app, jsonify, request
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
@@ -135,6 +136,33 @@ def _payload() -> tuple[dict[str, Any] | None, tuple[Any, int] | None]:
     if isinstance(raw_text, str) and len(raw_text.encode("utf-8")) > limit:
         return None, _error(f"Treść przekracza limit {limit // 1024} kB.", 413)
     return body, None
+
+
+@bp.get("/healthz")
+@limiter.exempt
+def healthz():
+    """Sygnał życia dla platformy hostingowej i do szybkiego sprawdzenia z ręki.
+
+    **Zawsze 200, dopóki proces odpowiada.** Stan bazy podajemy w treści, ale nie
+    zwracamy przez niego błędu: restart aplikacji i tak nie naprawi leżącego
+    Postgresa, a healthcheck zwracający porażkę przy każdym restarcie bazy
+    kazałby platformie w kółko ubijać zdrową aplikację.
+    """
+    database = True
+    try:
+        db.session.execute(sa.text("select 1"))
+    except Exception:
+        database = False
+        db.session.rollback()
+
+    return jsonify(
+        {
+            "status": "ok",
+            "database": database,
+            "ingest": bool(current_app.config.get("INGEST_TOKEN")),
+            "ai": bool(current_app.config.get("DEEPSEEK_API_KEY")),
+        }
+    )
 
 
 @bp.post("/ingest/transcript")

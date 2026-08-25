@@ -412,12 +412,88 @@ liczbie procesów to samo zadanie wykonałoby się kilka razy.
 
 ## Deploy na Railway
 
-1. Nowy projekt → *Deploy from GitHub repo*.
-2. Dodaj usługę **PostgreSQL** w tym samym projekcie.
-3. Zmienne środowiskowe: jak w `.env.example`. `DATABASE_URL` Railway wstawi sam
-   (aplikacja podmienia prefiks `postgres://` na `postgresql+psycopg://`).
-4. Migracje odpalają się przy każdym wdrożeniu — komenda `release` z `Procfile`.
-5. Style: `tailwind.css` jest w repozytorium, więc build nie wymaga Node'a.
+> **Plik `.env` NIE jedzie na serwer.** Jest w `.gitignore` i tak ma zostać.
+> Wszystkie zmienne wpisujesz w panelu Railwaya, ręcznie.
+
+### Zanim klikniesz cokolwiek
+
+Aplikacja stanie pod publicznym adresem, więc **hasło z developmentu przestaje
+wystarczać**. Wygeneruj nowe, mocne, i osobny komplet sekretów:
+
+```powershell
+.venv\Scripts\python.exe scripts\hash_password.py                       # ADMIN_PASSWORD_HASH
+.venv\Scripts\python.exe -c "import secrets; print(secrets.token_hex(32))"      # SECRET_KEY
+.venv\Scripts\python.exe -c "import secrets; print(secrets.token_urlsafe(32))"  # INGEST_TOKEN
+```
+
+Produkcyjny `SECRET_KEY` ma być **inny** niż lokalny — wyciek jednego nie może
+otwierać drugiego. `INGEST_TOKEN` też generujesz nowy, bo dopiero teraz stanie
+się realnie osiągalny z internetu.
+
+### Kroki
+
+1. **Nowy projekt** → *Deploy from GitHub repo* → `pkrodev/crmnoxso`.
+2. **Dodaj usługę PostgreSQL** w tym samym projekcie (*New* → *Database* →
+   *Add PostgreSQL*).
+3. **Zmienne środowiskowe** w usłudze aplikacji (*Variables*):
+
+   | Zmienna | Wartość |
+   |---|---|
+   | `DATABASE_URL` | `${{Postgres.DATABASE_URL}}` — odwołanie do usługi bazy, nie wklejony adres |
+   | `FLASK_ENV` | `production` |
+   | `FLASK_APP` | `wsgi.py` |
+   | `TZ` | `Europe/Warsaw` |
+   | `SECRET_KEY` | świeżo wygenerowany |
+   | `ADMIN_LOGIN` | `Milosz` |
+   | `ADMIN_PASSWORD_HASH` | hash **mocnego** hasła |
+   | `INGEST_TOKEN` | świeżo wygenerowany |
+   | `DEEPSEEK_API_KEY` | klucz z platform.deepseek.com |
+   | `AI_MODEL` | `deepseek-chat` |
+   | `SCHEDULER_ENABLED` | `1` |
+
+   SMS-owe (`SMSPLANET_TOKEN`, `SMSPLANET_SIGNATURE_KEY`, `SMS_SENDER_NAME`)
+   dołożysz przy etapie 7 — bez nich aplikacja działa, tylko kampanie nie ruszą.
+
+4. **Wygeneruj domenę**: *Settings* → *Networking* → *Generate Domain*.
+5. **Healthcheck** (opcjonalnie, ale warto): *Settings* → *Deploy* →
+   *Healthcheck Path* → `/api/healthz`.
+
+Migracje odpalają się przy każdym wdrożeniu — komenda `release` z `Procfile`.
+Pierwszy deploy założy więc cały schemat sam.
+
+### Po wdrożeniu
+
+```powershell
+# czy żyje i co ma skonfigurowane
+curl.exe https://TWOJA-DOMENA.up.railway.app/api/healthz
+
+# rozmowa na produkcję
+.venv\Scripts\python.exe scripts\send_transcript.py --adres https://TWOJA-DOMENA.up.railway.app --token PRODUKCYJNY_INGEST_TOKEN --tekst "Rozmowa testowa, numer 601 092 947."
+```
+
+`/api/healthz` zwraca `{"status":"ok","database":true,"ingest":true,"ai":true}`.
+Zawsze odpowiada 200, dopóki proces żyje — stan bazy jest w treści, nie w kodzie
+odpowiedzi, bo restart aplikacji i tak nie naprawi leżącego Postgresa.
+
+Bazę klientów wgrywasz przez `/import` tak samo jak lokalnie. Plik `.xlsx`
+zostaje na Twoim dysku i nigdy nie trafia do repozytorium.
+
+### Rzeczy, o których warto wiedzieć
+
+- **Jeden worker jest obowiązkowy.** `Procfile` uruchamia Gunicorna z
+  `--workers 1`, bo APScheduler chodzi w procesie aplikacji. Przy dwóch
+  workerach każda rozmowa poszłaby do modelu dwa razy — i tyle samo kosztowała.
+- **Dysk jest ulotny.** Arkusz wgrany na `/import` żyje do najbliższego
+  wdrożenia. Import startuje od razu po potwierdzeniu, więc w praktyce to nie
+  przeszkadza, ale nie zostawiaj wgranego pliku „na później".
+- **Python 3.13** — wersję przypina plik `.python-version`. Bez niego platforma
+  wybrałaby własną domyślną, a wersje paczek w `requirements.txt` są dobrane
+  pod 3.13.
+- **Styli nie trzeba budować.** `tailwind.css` jest w repozytorium właśnie po to
+  — Railway nie ma Node'a. Po każdej zmianie w szablonach przebuduj go lokalnie
+  i zacommituj, inaczej produkcja pojedzie ze starym arkuszem.
+- **Ciasteczka sesji mają flagę `Secure`** w konfiguracji produkcyjnej, więc
+  logowanie zadziała wyłącznie po HTTPS — na Railwayu to domyślne.
 
 Opcjonalnie: SMSPlanet pozwala ograniczyć dostęp do API listą adresów IP.
 Railway daje stabilniejsze adresy wyjściowe niż platformy bezserwerowe, ale
