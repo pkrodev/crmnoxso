@@ -207,6 +207,11 @@ nigdzie wklejać:
 W PowerShellu `curl` jest aliasem `Invoke-WebRequest` o innej składni — stąd
 skrypt zamiast gotowca z `curl`.
 
+**Do przekazania osobie, która wysyła rozmowy:**
+[`docs/endpoint-transkrypcji.md`](docs/endpoint-transkrypcji.md) — komplet
+w jednym pliku: oba warianty żądania, wszystkie pola, kody błędów i to, co dzieje
+się z rozmową po naszej stronie. Token przekazujesz osobno, nie ma go w tym pliku.
+
 Co warto wiedzieć:
 
 - **Token porównujemy `hmac.compare_digest`**, nie znakiem `==`. Zwykłe
