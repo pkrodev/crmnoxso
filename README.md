@@ -458,8 +458,14 @@ się realnie osiągalny z internetu.
 5. **Healthcheck** (opcjonalnie, ale warto): *Settings* → *Deploy* →
    *Healthcheck Path* → `/api/healthz`.
 
-Migracje odpalają się przy każdym wdrożeniu — komenda `release` z `Procfile`.
-Pierwszy deploy założy więc cały schemat sam.
+Migracje odpalają się **w komendzie startowej**, przed Gunicornem, więc pierwszy
+deploy zakłada cały schemat sam.
+
+> Railway czyta z `Procfile` wyłącznie linię `web:` i kroku `release:` **nie
+> wykonuje**. Sprawdzone na żywym wdrożeniu: aplikacja wstała, `/api/healthz`
+> odpowiadał `database:true` (bo to gołe `select 1`), a pierwsze prawdziwe
+> żądanie trafiło w nieistniejący schemat. Dlatego `flask db upgrade` jest
+> częścią komendy startowej — jest idempotentne, a worker jest jeden.
 
 ### Po wdrożeniu
 

@@ -1,0 +1,33 @@
+# Czego NIE wysyłamy przy wdrożeniu z dysku (`railway up`).
+#
+# Railway zwykle honoruje .gitignore, ale przy wysyłce plików z komputera nie ma
+# miejsca na „zwykle". Ten plik wypisuje wprost rzeczy, których wyciek byłby
+# kosztowny: sekrety i dane osobowe 1923 kontrahentów.
+
+# Sekrety
+.env
+.env.local
+railway-zmienne.txt
+
+# Dane osobowe klientów — arkusze wejściowe nigdy nie opuszczają dysku właściciela
+*.xlsx
+*.xls
+*.ods
+*.csv
+
+# Środowisko i śmieci lokalne
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.git/
+uploads/
+instance/
+tools/
+wheels/*.whl
+wheels/*.tar.gz
+
+# Zrzuty rozmów z Claude Code
+20??-??-??-*.txt
