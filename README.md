@@ -192,6 +192,17 @@ curl -X POST https://.../api/ingest/transcript      -H "Authorization: Bearer $I
 Odpowiedź przychodzi **natychmiast** (`202`), z numerem rozmowy i informacją,
 co się z nią stało — nadawca nie czeka na przetwarzanie.
 
+Do ręcznego sprawdzenia jest skrypt — bierze token z `.env`, więc nie trzeba go
+nigdzie wklejać:
+
+```powershell
+.venv\Scripts\python.exe scripts\send_transcript.py --tekst "Dzień dobry, tu Kowalski, mój numer to 601 092 947."
+.venv\Scripts\python.exe scripts\send_transcript.py rozmowa.txt --telefon "601 092 947" --data 14.03.2026
+```
+
+W PowerShellu `curl` jest aliasem `Invoke-WebRequest` o innej składni — stąd
+skrypt zamiast gotowca z `curl`.
+
 Co warto wiedzieć:
 
 - **Token porównujemy `hmac.compare_digest`**, nie znakiem `==`. Zwykłe
@@ -337,7 +348,8 @@ app/
 │   └── paging.py        stronicowanie wspólne dla list
 ├── templates/
 └── static/
-scripts/                 hash hasła, warianty logo, build CSS, kontrola normalizacji
+scripts/                 hash hasła, warianty logo, build CSS, kontrola normalizacji,
+                         wysyłka testowej transkrypcji
 tests/                   pytest
 wheels/                  paczki pobrane ręcznie (obejście blokady PyPI)
 ```
