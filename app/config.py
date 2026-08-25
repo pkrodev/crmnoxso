@@ -16,6 +16,19 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
+def _secret(name: str, default: str = "") -> str:
+    """Wartość ze zmiennej środowiskowej, oczyszczona z niewidzialnych śmieci.
+
+    Sekrety trafiają do panelu hostingu przez schowek, a po drodze potrafi się
+    do nich dokleić spacja, znak nowej linii albo **BOM** (``\\ufeff``). Kosztowało
+    to już jedno popołudnie: hash bcrypta z BOM-em na początku ma 61 znaków
+    zamiast 60, ``bcrypt.checkpw`` uznaje go za nieprawidłową sól i odrzuca
+    KAŻDE hasło — a aplikacja mówi tylko „nieprawidłowy login lub hasło",
+    bo celowo nie zdradza, która część zawiodła.
+    """
+    return os.environ.get(name, default).strip().lstrip("﻿").strip()
+
+
 def _database_url() -> str:
     """Adres bazy, z podmianą prefiksu.
 
@@ -33,7 +46,7 @@ def _database_url() -> str:
 class Config:
     """Wspólna baza konfiguracji."""
 
-    SECRET_KEY = os.environ.get("SECRET_KEY", "")
+    SECRET_KEY = _secret("SECRET_KEY")
 
     SQLALCHEMY_DATABASE_URI = _database_url()
     SQLALCHEMY_TRACK_MODIFICATIONS = False
@@ -63,24 +76,24 @@ class Config:
     )
 
     # Użytkownik (jeden, bez tabeli w bazie — sekcja 7 specyfikacji)
-    ADMIN_LOGIN = os.environ.get("ADMIN_LOGIN", "")
-    ADMIN_PASSWORD_HASH = os.environ.get("ADMIN_PASSWORD_HASH", "")
+    ADMIN_LOGIN = _secret("ADMIN_LOGIN")
+    ADMIN_PASSWORD_HASH = _secret("ADMIN_PASSWORD_HASH")
 
     # Strefa czasowa prezentacji (w bazie wszystko w UTC)
     DISPLAY_TZ = os.environ.get("TZ", "Europe/Warsaw")
 
     # SMS (etap 7)
     SMS_PROVIDER = os.environ.get("SMS_PROVIDER", "smsplanet")
-    SMSPLANET_TOKEN = os.environ.get("SMSPLANET_TOKEN", "")
-    SMSPLANET_SIGNATURE_KEY = os.environ.get("SMSPLANET_SIGNATURE_KEY", "")
+    SMSPLANET_TOKEN = _secret("SMSPLANET_TOKEN")
+    SMSPLANET_SIGNATURE_KEY = _secret("SMSPLANET_SIGNATURE_KEY")
     SMS_SENDER_NAME = os.environ.get("SMS_SENDER_NAME", "TEST")
 
     # AI (etap 5)
-    DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY", "")
+    DEEPSEEK_API_KEY = _secret("DEEPSEEK_API_KEY")
     AI_MODEL = os.environ.get("AI_MODEL", "deepseek-chat")
 
     # Endpoint transkrypcji (etap 4)
-    INGEST_TOKEN = os.environ.get("INGEST_TOKEN", "")
+    INGEST_TOKEN = _secret("INGEST_TOKEN")
 
     # Zadania w tle
     SCHEDULER_ENABLED = os.environ.get("SCHEDULER_ENABLED", "1") == "1"
