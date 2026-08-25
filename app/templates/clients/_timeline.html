@@ -78,6 +78,30 @@
                 <p class="text-sm text-ink-700 mt-1 whitespace-pre-line">{{ entry.description }}</p>
               {% endif %}
 
+              {#
+                Rozmowa telefoniczna jest rozwijalna: na osi czasu stoi samo
+                podsumowanie, pełny zapis dociąga HTMX dopiero po kliknięciu.
+                Transkrypcja potrafi mieć kilkanaście tysięcy znaków — wstawiona
+                w każdy wpis rozdęłaby stronę klienta nie do czytania.
+              #}
+              {% set transcript_id = entry.meta.transcript_id if entry.meta else None %}
+              {% if transcript_id %}
+                <div class="flex items-center gap-3 mt-1.5">
+                  <button type="button" class="link text-xs"
+                          hx-get="{{ url_for('transcripts.body', transcript_id=transcript_id) }}"
+                          hx-target="#rozmowa-{{ entry.id }}"
+                          hx-swap="innerHTML"
+                          hx-on::after-request="this.remove()">
+                    pokaż zapis rozmowy
+                  </button>
+                  <a class="link text-xs"
+                     href="{{ url_for('transcripts.detail', transcript_id=transcript_id) }}">
+                    otwórz rozmowę
+                  </a>
+                </div>
+                <div id="rozmowa-{{ entry.id }}" class="mt-2"></div>
+              {% endif %}
+
               <p class="text-xs text-ink-500 mt-1">
                 {{ activity_labels[entry.type.value] }}
               </p>

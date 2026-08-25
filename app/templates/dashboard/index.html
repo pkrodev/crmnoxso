@@ -5,21 +5,28 @@
 {% block content %}
 
 <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
+  {# Kafelek prowadzi tam, gdzie da się z liczbą coś zrobić — licznik rozmów
+     do przejrzenia otwiera od razu zakładkę „Wymagają uwagi". #}
   {% set tiles = [
-    ('Klienci ogółem', total_clients, none),
-    ('Nowi w tym miesiącu', new_this_month, none),
-    ('Rozmowy do przejrzenia', to_review, 'warning'),
-    ('Wydarzenia w 7 dni', upcoming_count, none)
+    ('Klienci ogółem', total_clients, none, url_for('clients.index')),
+    ('Nowi w tym miesiącu', new_this_month, none, none),
+    ('Rozmowy do przejrzenia', to_review, 'warning', url_for('transcripts.index', status='uwaga')),
+    ('Wydarzenia w 7 dni', upcoming_count, none, none)
   ] %}
-  {% for label, value, tone in tiles %}
-    <div class="card">
+  {% for label, value, tone, href in tiles %}
+    {% set body %}
       <div class="card-body">
         <div class="section-title mb-2">{{ label }}</div>
         <div class="text-2xl font-semibold {{ 'text-warning' if tone == 'warning' and value else 'text-ink-900' }}">
           {{ value }}
         </div>
       </div>
-    </div>
+    {% endset %}
+    {% if href %}
+      <a href="{{ href }}" class="card hover:border-amber-500 transition-colors">{{ body }}</a>
+    {% else %}
+      <div class="card">{{ body }}</div>
+    {% endif %}
   {% endfor %}
 </div>
 

@@ -29,7 +29,6 @@ from rapidfuzz import fuzz
 
 from app.extensions import db
 from app.models import (
-    SYSTEM_TAGS,
     TAG_NEEDS_REVIEW,
     TAG_POSSIBLE_DUPLICATE,
     Activity,
@@ -40,8 +39,8 @@ from app.models import (
     ImportJob,
     ImportStatus,
     Phone,
-    Tag,
 )
+from app.services.clients import get_or_create_tag
 from app.services.normalize import (
     PhoneCandidate,
     normalize_acronym,
@@ -400,15 +399,6 @@ FIELDS_TO_COMPARE = ("name", "city", "postal_code", "street", "email", "nip")
 NAME_SIMILARITY_THRESHOLD = 92
 
 
-def _get_or_create_tag(name: str) -> Tag:
-    tag = db.session.scalar(sa.select(Tag).where(Tag.name == name))
-    if tag is None:
-        tag = Tag(name=name, color=SYSTEM_TAGS.get(name))
-        db.session.add(tag)
-        db.session.flush()
-    return tag
-
-
 def run_import(job_id: int, progress_every: int = 25) -> dict[str, Any]:
     """Wykonuje import. Uruchamiane z APSchedulera, nie z żądania HTTP."""
     job = db.session.get(ImportJob, job_id)
@@ -449,8 +439,8 @@ def _apply_rows(
     created = updated = skipped = flagged = 0
     problems: list[dict[str, Any]] = []
 
-    tag_review = _get_or_create_tag(TAG_NEEDS_REVIEW)
-    tag_duplicate = _get_or_create_tag(TAG_POSSIBLE_DUPLICATE)
+    tag_review = get_or_create_tag(TAG_NEEDS_REVIEW)
+    tag_duplicate = get_or_create_tag(TAG_POSSIBLE_DUPLICATE)
 
     for index, row in enumerate(rows, start=1):
         if not row.values.get("name"):

@@ -3,9 +3,9 @@
 Jednoosobowy CRM dla firmy NOXSO (branża rolnicza, Wielkopolska).
 Specyfikacja projektu: [`CLAUDE.md`](CLAUDE.md).
 
-Stan prac: **etapy 1–3** (fundament, import z normalizacją, ekran klientów),
-uruchomione i sprawdzone na prawdziwej bazie 1923 kontrahentów.
-Etapy 4–8 — transkrypcje, AI, kalendarz, SMS, ustawienia — przed nami.
+Stan prac: **etapy 1–4** (fundament, import z normalizacją, ekran klientów,
+transkrypcje rozmów), uruchomione i sprawdzone na prawdziwej bazie
+1923 kontrahentów. Etapy 5–8 — AI, kalendarz, SMS, ustawienia — przed nami.
 
 ---
 
@@ -169,6 +169,77 @@ i całą oś czasu.
 
 ---
 
+## Rozmowy
+
+Transkrypcje rozmów telefonicznych wrzuca do systemu osoba z zewnątrz —
+endpointem, nie przez interfejs.
+
+```
+POST /api/ingest/transcript
+Authorization: Bearer <INGEST_TOKEN>
+```
+
+Dwa warianty żądania:
+
+```bash
+# plik .txt
+curl -X POST https://.../api/ingest/transcript      -H "Authorization: Bearer $INGEST_TOKEN"      -F "file=@rozmowa.txt" -F "phone=601 092 947" -F "date=14.03.2026"
+
+# JSON
+curl -X POST https://.../api/ingest/transcript      -H "Authorization: Bearer $INGEST_TOKEN"      -H "Content-Type: application/json"      -d '{"text": "...", "phone": "601092947", "date": "2026-03-14"}'
+```
+
+Odpowiedź przychodzi **natychmiast** (`202`), z numerem rozmowy i informacją,
+co się z nią stało — nadawca nie czeka na przetwarzanie.
+
+Co warto wiedzieć:
+
+- **Token porównujemy `hmac.compare_digest`**, nie znakiem `==`. Zwykłe
+  porównanie kończy się na pierwszym różnym znaku i przy odpowiednio wielu
+  próbach zdradza token po czasie odpowiedzi. Pusty `INGEST_TOKEN` w konfiguracji
+  oznacza „endpoint wyłączony" (`503`), nigdy „wpuszczaj wszystkich".
+- **Kodowanie wykrywamy sami.** Pliki `.txt` z Windowsa bywają w CP1250,
+  a bywają w UTF-8. Bez wykrycia polskie znaki zamieniłyby się w krzaki.
+- **Limit 1 MB** na treść, większe odrzucamy czytelnym komunikatem w JSON-ie.
+- Data przyjmowana po polsku (`14.03.2026`) i po ISO (`2026-03-14`).
+
+### Dopasowanie do klienta
+
+Numer bierzemy z pola `phone`, a gdy go nie ma — **wyłuskujemy z treści
+rozmowy**. Wzorzec jest celowo ostrożny: kandydat przechodzi przez ten sam
+normalizator, co import, więc NIP (`617-101-01-49`), data (`2026-03-14`)
+i kwota (`1 200 000`) odpadają same, bo nie są poprawnymi numerami polskimi.
+
+| Sytuacja | Co się dzieje |
+|---|---|
+| numer należy do jednego klienta | rozmowa przypięta, wpis na osi czasu |
+| numeru nie ma w bazie | **zakładamy klienta** (`source=TRANSCRIPT`, tag `nowy-z-rozmowy`) |
+| numer mają dwa gospodarstwa | `NEEDS_REVIEW` — system **nie zgaduje** |
+| brak numeru w ogóle | `NEEDS_REVIEW`, do ręcznego przypisania |
+
+Trzeci wiersz nie jest teoretyczny: w bazie źródłowej 58 numerów należy do
+dwóch lub trzech odrębnych gospodarstw (rodzina pod jednym telefonem), dlatego
+kolumna `phones.e164` celowo nie ma ograniczenia UNIQUE.
+
+**Surowy tekst rozmowy zostaje w bazie zawsze** — także wtedy, gdy nie ma do
+kogo go przypiąć.
+
+### Ekran `/transcripts`
+
+Lista z zakładkami; „Wymagają uwagi" łączy `NEEDS_REVIEW` i `FAILED`, bo dla
+użytkownika znaczą to samo. Wyszukiwarka obejmuje treść rozmowy, nazwę klienta,
+nazwę pliku i numer telefonu w dowolnym zapisie.
+
+W panelu rozmowy przypisujesz klienta ręcznie — z listy gospodarstw mających
+ten numer albo z wyszukiwarki. Przycisk „przetwórz ponownie" powtarza
+dopasowanie; przydaje się, gdy numer dopisano klientowi już po rozmowie.
+Zmiana przypisania zostawia ślad na osi czasu poprzedniego klienta.
+
+Na osi czasu klienta rozmowa stoi jako jeden wpis; pełny zapis dociąga HTMX
+dopiero po kliknięciu — transkrypcja potrafi mieć kilkanaście tysięcy znaków.
+
+---
+
 ## Testy
 
 ```powershell
@@ -177,8 +248,10 @@ i całą oś czasu.
 ```
 
 Testami objęte są miejsca, w których błąd po cichu zepsułby 2000 rekordów:
-normalizacja telefonów, NIP-ów, miast i kodów pocztowych oraz mapowanie kolumn
-i deduplikacja w importerze. Przypadki testowe pochodzą z prawdziwego pliku.
+normalizacja telefonów, NIP-ów, miast i kodów pocztowych, mapowanie kolumn
+i deduplikacja w importerze, wyszukiwanie po numerze oraz wyłuskiwanie numeru
+z treści rozmowy i autoryzacja endpointu transkrypcji. Przypadki testowe
+pochodzą z prawdziwego pliku.
 
 Jakość kodu:
 
@@ -254,11 +327,14 @@ app/
 ├── filters.py           filtry Jinja (daty w Europe/Warsaw, telefony, NIP)
 ├── tasks.py             zadania APSchedulera
 ├── models/              modele SQLAlchemy 2.0
-├── blueprints/          auth, dashboard, clients, imports
+├── blueprints/          auth, dashboard, clients, imports, transcripts, api
 ├── services/
 │   ├── normalize.py     telefony, NIP, miasta, kody pocztowe
 │   ├── importer.py      odczyt arkusza, deduplikacja, zapis
-│   └── clients.py       wyszukiwanie, filtry, edycja pól, oś czasu
+│   ├── clients.py       wyszukiwanie, filtry, edycja pól, oś czasu
+│   ├── matching.py      numer z treści rozmowy → klient
+│   ├── transcripts.py   lista rozmów, zakładki, liczniki
+│   └── paging.py        stronicowanie wspólne dla list
 ├── templates/
 └── static/
 scripts/                 hash hasła, warianty logo, build CSS, kontrola normalizacji

@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import contextlib
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any
 
@@ -26,6 +26,7 @@ from sqlalchemy.orm import selectinload
 
 from app.extensions import db
 from app.models import (
+    SYSTEM_TAGS,
     Activity,
     ActivityActor,
     ActivityType,
@@ -46,8 +47,7 @@ from app.services.normalize import (
     normalize_street,
     phone_search_variants,
 )
-
-PAGE_SIZE = 50
+from app.services.paging import PAGE_SIZE, Page
 
 # Minimalna liczba cyfr, od której traktujemy wpisany ciąg jako fragment
 # numeru albo NIP-u. Poniżej tego progu zbyt wiele rekordów pasuje do wszystkiego.
@@ -117,32 +117,8 @@ class ClientFilters:
         return params
 
 
-@dataclass(slots=True)
-class Page:
-    rows: list[tuple[Client, datetime | None]] = field(default_factory=list)
-    total: int = 0
-    page: int = 1
-    page_size: int = PAGE_SIZE
-
-    @property
-    def pages(self) -> int:
-        return max(1, -(-self.total // self.page_size))
-
-    @property
-    def has_prev(self) -> bool:
-        return self.page > 1
-
-    @property
-    def has_next(self) -> bool:
-        return self.page < self.pages
-
-    @property
-    def first_index(self) -> int:
-        return 0 if not self.total else (self.page - 1) * self.page_size + 1
-
-    @property
-    def last_index(self) -> int:
-        return min(self.page * self.page_size, self.total)
+# Wiersz listy: klient plus data ostatniego kontaktu policzona podzapytaniem.
+ClientRow = tuple[Client, datetime | None]
 
 
 # ---------------------------------------------------------------------------
@@ -235,7 +211,7 @@ def build_query(filters: ClientFilters):
     return stmt
 
 
-def list_clients(filters: ClientFilters) -> Page:
+def list_clients(filters: ClientFilters) -> Page[ClientRow]:
     """Strona wyników — klienci wraz z datą ostatniego kontaktu."""
     stmt = build_query(filters)
 
@@ -499,6 +475,21 @@ def remove_phone(client: Client, phone_id: int) -> bool:
 # ---------------------------------------------------------------------------
 
 
+def get_or_create_tag(name: str) -> Tag:
+    """Tag o tej nazwie albo nowy. Tagi systemowe dostają kolor z ``SYSTEM_TAGS``.
+
+    Zakładają je trzy miejsca — import, dopasowanie rozmów i ręczne dodanie
+    w panelu klienta — a nazwy tagów są unikalne, więc próba wstawienia drugiego
+    o tej samej nazwie kończyłaby się błędem bazy.
+    """
+    tag = db.session.scalar(sa.select(Tag).where(Tag.name == name))
+    if tag is None:
+        tag = Tag(name=name, color=SYSTEM_TAGS.get(name))
+        db.session.add(tag)
+        db.session.flush()
+    return tag
+
+
 def add_tag(client: Client, name: str) -> FieldUpdate:
     name = (name or "").strip().lower()
     if not name:
@@ -509,12 +500,7 @@ def add_tag(client: Client, name: str) -> FieldUpdate:
     if client.has_tag(name):
         return FieldUpdate(ok=True, value=name)
 
-    tag = db.session.scalar(sa.select(Tag).where(Tag.name == name))
-    if tag is None:
-        tag = Tag(name=name)
-        db.session.add(tag)
-        db.session.flush()
-
+    tag = get_or_create_tag(name)
     client.tags.append(tag)
     log_activity(client, ActivityType.TAG_ADDED, f"Dodano tag: {name}")
     return FieldUpdate(ok=True, value=name)

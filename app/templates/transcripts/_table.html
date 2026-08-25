@@ -1,0 +1,120 @@
+{#
+  Fragment podmieniany przez HTMX przy wyszukiwaniu i zmianie strony.
+  Zawiera także paginację — ta zmienia się razem z wynikami.
+#}
+<div id="tabela-rozmow" class="card overflow-hidden">
+
+  {% if page.rows %}
+    <div class="overflow-x-auto">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Wpłynęła</th>
+            <th>Klient</th>
+            <th>Numer</th>
+            <th>Rozmowa</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for transcript in page.rows %}
+            <tr>
+              <td class="text-ink-700 whitespace-nowrap">
+                <a href="{{ url_for('transcripts.detail', transcript_id=transcript.id) }}"
+                   class="hover:text-amber-800">
+                  {{ transcript.created_at | datetime_pl }}
+                </a>
+                {% if transcript.call_date %}
+                  <span class="block text-xs text-ink-500">
+                    rozmowa {{ transcript.call_date | date_pl }}
+                  </span>
+                {% endif %}
+              </td>
+
+              {# Nazwa klienta jest najmocniej wyeksponowanym elementem wiersza. #}
+              <td>
+                {% if transcript.client %}
+                  <a href="{{ url_for('clients.detail', client_id=transcript.client.id) }}"
+                     class="font-medium text-ink-900 hover:text-amber-800">
+                    {{ transcript.client.name }}
+                  </a>
+                {% else %}
+                  <span class="text-orange-700">nieprzypisana</span>
+                {% endif %}
+              </td>
+
+              <td class="text-ink-700 whitespace-nowrap">
+                {{ transcript.phone_e164 | phone_pl }}
+              </td>
+
+              <td class="text-ink-700">
+                <a href="{{ url_for('transcripts.detail', transcript_id=transcript.id) }}"
+                   class="block max-w-xl">
+                  {{ transcript.ai_summary or transcript.raw_text[:160] }}{% if not transcript.ai_summary and transcript.raw_text|length > 160 %}…{% endif %}
+                </a>
+                {% if transcript.source_file %}
+                  <span class="block text-xs text-ink-500">{{ transcript.source_file }}</span>
+                {% endif %}
+              </td>
+
+              <td>
+                {% include 'transcripts/_status.html' %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if page.pages > 1 %}
+      <div class="px-4 py-2.5 border-t border-ink-200 flex items-center justify-between text-sm">
+        <span class="text-ink-500">
+          {{ page.first_index }}–{{ page.last_index }} z {{ page.total }}
+        </span>
+
+        <div class="flex items-center gap-1">
+          {% set params = filters.as_params() %}
+          {% if page.has_prev %}
+            <a class="btn-secondary"
+               hx-get="{{ url_for('transcripts.index', strona=page.page - 1, **params) }}"
+               hx-target="#tabela-rozmow" hx-swap="outerHTML" hx-push-url="true"
+               href="{{ url_for('transcripts.index', strona=page.page - 1, **params) }}">Poprzednia</a>
+          {% else %}
+            <span class="btn-secondary opacity-40 cursor-default">Poprzednia</span>
+          {% endif %}
+
+          <span class="px-2 text-ink-700">{{ page.page }} / {{ page.pages }}</span>
+
+          {% if page.has_next %}
+            <a class="btn-secondary"
+               hx-get="{{ url_for('transcripts.index', strona=page.page + 1, **params) }}"
+               hx-target="#tabela-rozmow" hx-swap="outerHTML" hx-push-url="true"
+               href="{{ url_for('transcripts.index', strona=page.page + 1, **params) }}">Następna</a>
+          {% else %}
+            <span class="btn-secondary opacity-40 cursor-default">Następna</span>
+          {% endif %}
+        </div>
+      </div>
+    {% endif %}
+
+  {% else %}
+    <div class="px-4 py-10 text-center">
+      <p class="text-ink-700">
+        {% if filters.active %}
+          Nic nie pasuje do tych kryteriów.
+        {% else %}
+          Nie wpłynęła jeszcze żadna rozmowa.
+        {% endif %}
+      </p>
+      {% if filters.active %}
+        <a href="{{ url_for('transcripts.index') }}" class="link text-sm">wyczyść filtry</a>
+      {% else %}
+        <p class="text-sm text-ink-500 mt-1">
+          Rozmowy trafiają tu automatycznie przez endpoint
+          <code>POST /api/ingest/transcript</code>.
+        </p>
+      {% endif %}
+    </div>
+  {% endif %}
+
+</div>

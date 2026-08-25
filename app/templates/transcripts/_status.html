@@ -1,0 +1,16 @@
+{#
+  Etykieta statusu rozmowy. Osobny plik, bo używa jej i tabela, i panel rozmowy.
+  Oczekuje zmiennej `transcript`.
+#}
+{% set value = transcript.status.value %}
+{% if value == 'DONE' %}
+  <span class="badge-success">{{ transcript_status_labels[value] }}</span>
+{% elif value == 'FAILED' %}
+  <span class="badge-danger">{{ transcript_status_labels[value] }}</span>
+{% elif value == 'NEEDS_REVIEW' %}
+  <span class="badge-warning">{{ transcript_status_labels[value] }}</span>
+{% elif value == 'PROCESSING' %}
+  <span class="badge-brand">{{ transcript_status_labels[value] }}</span>
+{% else %}
+  <span class="badge-neutral">{{ transcript_status_labels[value] }}</span>
+{% endif %}

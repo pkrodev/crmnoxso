@@ -1,0 +1,32 @@
+{#
+  Podpowiedzi klientów przy ręcznym przypisaniu rozmowy. Fragment wracający
+  z serwera przy każdym wpisanym znaku — bez linijki własnego JavaScriptu.
+#}
+<div id="wyniki-klientow" class="mt-2">
+
+  {% if not query %}
+    <p class="text-xs text-ink-500">Zacznij pisać, żeby wyszukać klienta.</p>
+
+  {% elif results %}
+    {% for client in results %}
+      <form method="post" class="flex items-center gap-2 py-1 border-b border-ink-200"
+            action="{{ url_for('transcripts.assign', transcript_id=transcript.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token_value }}">
+        <input type="hidden" name="client_id" value="{{ client.id }}">
+        <span class="flex-1 min-w-0">
+          <span class="block text-sm text-ink-900 truncate">{{ client.name }}</span>
+          <span class="block text-xs text-ink-500">
+            {{ client.city or 'bez miasta' }}
+            {%- set phone = client.primary_phone %}
+            {%- if phone and phone.e164 %} · {{ phone.e164 | phone_pl }}{% endif %}
+          </span>
+        </span>
+        <button type="submit" class="btn-secondary shrink-0">Przypisz</button>
+      </form>
+    {% endfor %}
+
+  {% else %}
+    <p class="text-xs text-ink-500">Nic nie pasuje do „{{ query }}”.</p>
+  {% endif %}
+
+</div>

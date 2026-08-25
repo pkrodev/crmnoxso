@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+{% block title %}Rozmowa #{{ transcript.id }} · {{ app_name }}{% endblock %}
+{% block heading %}Rozmowa #{{ transcript.id }}{% endblock %}
+
+{% block subheading %}
+  <p class="text-xs text-ink-500 mt-0.5">
+    wpłynęła {{ transcript.created_at | datetime_pl }}
+    {%- if transcript.source_file %} · {{ transcript.source_file }}{% endif %}
+  </p>
+{% endblock %}
+
+{% block actions %}
+  <a href="{{ url_for('transcripts.index') }}" class="btn-secondary">Wróć do listy</a>
+  <form method="post" action="{{ url_for('transcripts.reprocess', transcript_id=transcript.id) }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token_value }}">
+    <button type="submit" class="btn-primary">Przetwórz ponownie</button>
+  </form>
+{% endblock %}
+
+{% block content %}
+<div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)] items-start">
+
+  {# --- Lewa kolumna: metryka i przypisanie ------------------------------- #}
+  <div class="grid gap-4">
+
+    <div class="card">
+      <div class="card-header">
+        <span class="section-title">Rozmowa</span>
+        {% include 'transcripts/_status.html' %}
+      </div>
+      <div class="card-body py-3 text-sm">
+        <dl class="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-1.5">
+          <dt class="text-ink-500">Numer</dt>
+          <dd class="text-ink-900">
+            {{ transcript.phone_e164 | phone_pl }}
+            {% if transcript.phone_raw and transcript.phone_raw != transcript.phone_e164 %}
+              <span class="text-xs text-ink-500">(z żądania: {{ transcript.phone_raw }})</span>
+            {% endif %}
+          </dd>
+
+          <dt class="text-ink-500">Data rozmowy</dt>
+          <dd class="text-ink-900">{{ transcript.call_date | date_pl }}</dd>
+
+          <dt class="text-ink-500">Przetworzona</dt>
+          <dd class="text-ink-900">{{ transcript.processed_at | datetime_pl }}</dd>
+
+          {% if transcript.attempts %}
+            <dt class="text-ink-500">Prób analizy</dt>
+            <dd class="text-ink-900">{{ transcript.attempts }}</dd>
+          {% endif %}
+        </dl>
+
+        {% if transcript.error %}
+          <p class="field-error mt-2">{{ transcript.error }}</p>
+        {% endif %}
+
+        {% if found_in_text %}
+          <p class="text-xs text-ink-500 mt-3">
+            Numery znalezione w treści:
+            {% for phone in found_in_text %}
+              <span class="badge-soft mr-1">{{ phone.e164 | phone_pl }}</span>
+            {% endfor %}
+          </p>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="section-title">Klient</span>
+      </div>
+      <div class="card-body py-3">
+
+        {% if transcript.client %}
+          <a href="{{ url_for('clients.detail', client_id=transcript.client.id) }}"
+             class="font-medium text-ink-900 hover:text-amber-800">
+            {{ transcript.client.name }}
+          </a>
+          <p class="text-xs text-ink-500 mt-0.5">
+            {{ transcript.client.city or 'bez miasta' }}
+          </p>
+
+          <form method="post" class="mt-3"
+                action="{{ url_for('transcripts.unassign', transcript_id=transcript.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token_value }}">
+            <button type="submit" class="btn-secondary">Odepnij od klienta</button>
+          </form>
+
+        {% else %}
+          <p class="text-sm text-ink-700">
+            Ta rozmowa nie ma jeszcze klienta.
+          </p>
+
+          {% if candidates %}
+            {#
+              Ten sam numer bywa wspólny dla kilku gospodarstw — system celowo
+              nie zgaduje, który to, tylko pokazuje wszystkich do wyboru.
+            #}
+            <p class="text-xs text-ink-500 mt-2 mb-1.5">
+              Numer {{ transcript.phone_e164 | phone_pl }} mają w bazie:
+            </p>
+            {% for candidate in candidates %}
+              <form method="post" class="flex items-center gap-2 py-1 border-b border-ink-200"
+                    action="{{ url_for('transcripts.assign', transcript_id=transcript.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token_value }}">
+                <input type="hidden" name="client_id" value="{{ candidate.id }}">
+                <span class="flex-1 text-sm text-ink-900">
+                  {{ candidate.name }}
+                  <span class="text-xs text-ink-500">{{ candidate.city or '' }}</span>
+                </span>
+                <button type="submit" class="btn-secondary">Przypisz</button>
+              </form>
+            {% endfor %}
+          {% endif %}
+        {% endif %}
+
+        {# Wyszukiwarka klienta — działa i przy braku przypisania, i przy zmianie #}
+        <details class="mt-3" {{ 'open' if not transcript.client and not candidates }}>
+          <summary class="text-sm text-ink-700 cursor-pointer select-none">
+            {{ 'Zmień przypisanie' if transcript.client else 'Wskaż klienta ręcznie' }}
+          </summary>
+          <div class="mt-2">
+            <input class="input" type="search" name="q" autocomplete="off"
+                   placeholder="nazwa, miasto, NIP albo numer telefonu"
+                   hx-get="{{ url_for('transcripts.picker', transcript_id=transcript.id) }}"
+                   hx-target="#wyniki-klientow"
+                   hx-swap="outerHTML"
+                   hx-trigger="keyup changed delay:300ms, search">
+            <div id="wyniki-klientow"></div>
+          </div>
+        </details>
+
+      </div>
+    </div>
+  </div>
+
+  {# --- Prawa kolumna: analiza i treść ------------------------------------ #}
+  <div class="grid gap-4">
+
+    <div class="card">
+      <div class="card-header">
+        <span class="section-title">Analiza</span>
+        {% if transcript.ai_summary %}<span class="badge-brand">AI</span>{% endif %}
+      </div>
+      <div class="card-body py-3">
+        {% if transcript.ai_summary %}
+          <p class="text-sm text-ink-900 whitespace-pre-line">{{ transcript.ai_summary }}</p>
+          <dl class="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-1 mt-3 text-sm">
+            {% if transcript.ai_outcome %}
+              <dt class="text-ink-500">Wynik</dt>
+              <dd class="text-ink-900">{{ transcript.ai_outcome }}</dd>
+            {% endif %}
+            {% if transcript.ai_sentiment %}
+              <dt class="text-ink-500">Wydźwięk</dt>
+              <dd class="text-ink-900">{{ transcript.ai_sentiment }}</dd>
+            {% endif %}
+          </dl>
+        {% else %}
+          <p class="text-sm text-ink-500">
+            Rozmowa czeka na analizę. Podsumowanie, wydźwięk i wydarzenia
+            w kalendarzu dokłada etap 5.
+          </p>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="section-title">Treść rozmowy</span>
+        <span class="text-xs text-ink-500">{{ transcript.raw_text | length }} znaków</span>
+      </div>
+      <div class="card-body py-3">
+        {% include 'transcripts/_body.html' %}
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

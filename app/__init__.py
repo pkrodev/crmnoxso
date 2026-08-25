@@ -17,7 +17,13 @@ from app.filters import register_filters
 
 # Endpointy dostępne bez logowania. Blueprint `api` ma własną autoryzację
 # (token po stronie nagłówka, podpis HMAC webhooka), więc też jest tu wymieniony.
-PUBLIC_BLUEPRINTS = {"auth", "api", "static"}
+PUBLIC_BLUEPRINTS = {"auth", "api"}
+
+# Pliki statyczne aplikacji NIE należą do żadnego blueprintu — `request.blueprint`
+# jest dla nich `None`, więc sprawdzenie po nazwie blueprintu ich nie przepuszczało
+# i arkusz stylów wracał przekierowaniem na /login. Skutek: ekran logowania
+# renderował się bez stylów, jako goły HTML. Dlatego osobny wyjątek po endpoincie.
+PUBLIC_ENDPOINTS = {"static"}
 
 
 def create_app(config_name: str | None = None) -> Flask:
@@ -52,12 +58,20 @@ def _init_extensions(app: Flask) -> None:
 
 
 def _register_blueprints(app: Flask) -> None:
-    from app.blueprints import auth, clients, dashboard, imports
+    from app.blueprints import api, auth, clients, dashboard, imports, transcripts
 
     app.register_blueprint(auth.bp)
     app.register_blueprint(dashboard.bp)
     app.register_blueprint(clients.bp, url_prefix="/clients")
     app.register_blueprint(imports.bp, url_prefix="/import")
+    app.register_blueprint(transcripts.bp, url_prefix="/transcripts")
+    app.register_blueprint(api.bp, url_prefix="/api")
+
+    # Endpointy maszynowe nie mają formularza ani ciasteczka sesji, którym dałoby
+    # się posłużyć w ataku CSRF — autoryzuje je token w nagłówku (a od etapu 7
+    # także podpis HMAC webhooka). Bez tego zwolnienia każde żądanie z zewnątrz
+    # odbijałoby się od ochrony CSRF.
+    csrf.exempt(api.bp)
 
 
 def _register_auth_guard(app: Flask) -> None:
@@ -66,6 +80,8 @@ def _register_auth_guard(app: Flask) -> None:
     @app.before_request
     def require_login():  # type: ignore[misc]
         if request.blueprint in PUBLIC_BLUEPRINTS:
+            return None
+        if request.endpoint in PUBLIC_ENDPOINTS:
             return None
         if request.endpoint is None:
             return None

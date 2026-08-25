@@ -105,6 +105,10 @@ class TestConfig(Config):
     TESTING = True
     WTF_CSRF_ENABLED = False
     SCHEDULER_ENABLED = False
+    # Limiter trzyma liczniki w pamięci procesu, a testy dzielą jedną aplikację.
+    # Włączony odciąłby logowanie po piątym teście, który się loguje — i to nie
+    # dlatego, że coś jest zepsute. Sam limit sprawdzamy ręcznie, na żywej aplikacji.
+    RATELIMIT_ENABLED = False
     SESSION_COOKIE_SECURE = False
     SECRET_KEY = "test"
     SQLALCHEMY_DATABASE_URI = os.environ.get(

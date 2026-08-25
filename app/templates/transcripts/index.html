@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block title %}Rozmowy · {{ app_name }}{% endblock %}
+{% block heading %}Rozmowy{% endblock %}
+
+{% block subheading %}
+  <p class="text-xs text-ink-500 mt-0.5">
+    {{ page.total }} {{ plural_pl(page.total, 'rozmowa', 'rozmowy', 'rozmów') }}
+    {%- if filters.active %} po zawężeniu{% endif %}
+  </p>
+{% endblock %}
+
+{% block content %}
+
+{#
+  Zakładki są zwykłymi odnośnikami, nie HTMX-em: zmieniają nie tylko tabelę,
+  ale i to, która zakładka jest podświetlona, więc przeładowanie strony jest tu
+  uczciwsze niż podmiana fragmentu. Wyszukiwarka poniżej idzie już przez HTMX.
+#}
+<div class="flex items-center gap-1 mb-3 border-b border-ink-200">
+  {% set tabs = [
+    ('', 'Wszystkie', counts['total']),
+    (attention, 'Wymagają uwagi', counts[attention]),
+    ('PENDING', 'Oczekują', counts['PENDING']),
+    ('DONE', 'Gotowe', counts['DONE'])
+  ] %}
+  {% for value, label, count in tabs %}
+    {% set is_active = filters.status == value %}
+    <a href="{{ url_for('transcripts.index', status=value) if value else url_for('transcripts.index') }}"
+       class="px-3 py-2 text-sm border-b-2 -mb-px
+              {{ 'border-amber-500 text-ink-900 font-medium' if is_active
+                 else 'border-transparent text-ink-500 hover:text-ink-900' }}">
+      {{ label }}
+      <span class="{{ 'badge-warning' if value == attention and count else 'text-ink-500' }} ml-1 text-xs">
+        {{ count }}
+      </span>
+    </a>
+  {% endfor %}
+</div>
+
+<form class="card mb-3"
+      hx-get="{{ url_for('transcripts.index') }}"
+      hx-target="#tabela-rozmow"
+      hx-swap="outerHTML"
+      hx-indicator="#szukanie"
+      hx-trigger="submit, keyup changed delay:300ms from:#pole-szukania"
+      hx-push-url="true">
+
+  {# Zakładka jedzie z wyszukiwaniem, inaczej wpisanie litery wyrzucałoby
+     użytkownika z „Wymagają uwagi" na pełną listę. #}
+  <input type="hidden" name="status" value="{{ filters.status }}">
+
+  <div class="card-body py-3">
+    <label class="label" for="pole-szukania">Szukaj w rozmowach</label>
+    <input id="pole-szukania" class="input" type="search" name="q"
+           value="{{ filters.query }}" autocomplete="off"
+           placeholder="treść rozmowy, nazwa klienta, numer telefonu albo nazwa pliku">
+    <div class="flex items-center gap-3 mt-1">
+      <span id="szukanie" class="htmx-indicator text-xs text-ink-500">szukam…</span>
+      {% if filters.active %}
+        <a href="{{ url_for('transcripts.index') }}" class="link text-xs ml-auto">wyczyść</a>
+      {% endif %}
+    </div>
+  </div>
+</form>
+
+{% include 'transcripts/_table.html' %}
+
+{% endblock %}
