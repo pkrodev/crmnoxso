@@ -4,8 +4,12 @@ Jednoosobowy CRM dla firmy NOXSO (branża rolnicza, Wielkopolska).
 Specyfikacja projektu: [`CLAUDE.md`](CLAUDE.md).
 
 Stan prac: **etapy 1–6** (fundament, import z normalizacją, ekran klientów,
-transkrypcje rozmów, analiza AI, kalendarz), uruchomione i sprawdzone na
-prawdziwej bazie 1923 kontrahentów. Etapy 7–8 — SMS i ustawienia — przed nami.
+transkrypcje rozmów, analiza AI, kalendarz). Etapy 7–8 — SMS i ustawienia —
+przed nami.
+
+Aplikacja **działa na produkcji**: <https://noxso-crm-production.up.railway.app>
+
+Pełny stan wdrożenia i lista rzeczy do zrobienia: [Stan na dziś](#stan-na-dziś).
 
 ---
 
@@ -513,6 +517,55 @@ zostaje na Twoim dysku i nigdy nie trafia do repozytorium.
 Opcjonalnie: SMSPlanet pozwala ograniczyć dostęp do API listą adresów IP.
 Railway daje stabilniejsze adresy wyjściowe niż platformy bezserwerowe, ale
 **nie gwarantuje statycznego IP** — nie włączaj tej filtracji domyślnie.
+
+---
+
+## Stan na dziś
+
+Wdrożenie z 25 sierpnia 2026. Aplikacja stoi i odpowiada, przetestowana od
+końca do końca **na żywym modelu i żywej bazie**.
+
+| | |
+|---|---|
+| Adres | <https://noxso-crm-production.up.railway.app> |
+| Projekt Railway | `noxso-crm` (usługi: `noxso-crm`, `Postgres`) |
+| Sygnał życia | `/api/healthz` — zawsze 200, stan bazy i kluczy w treści |
+| Etapy | 1–6 gotowe, 7–8 przed nami |
+| Testy | 299, wszystkie przechodzą; `ruff` i `mypy` czyste |
+
+Co zostało sprawdzone na produkcji, nie tylko lokalnie: przyjęcie rozmowy
+(JSON i plik `.txt` w CP1250), dopasowanie po numerze, założenie klienta
+z nieznanego numeru, analiza modelem w tle, przeliczenie terminu względnego
+(„przyszły czwartek o dziesiątej" → 3 września, 10:00) i wpisanie go do
+kalendarza jako propozycji do potwierdzenia.
+
+### Do zrobienia
+
+- [ ] **Dostęp aplikacji Railway do repozytorium.**
+      <https://github.com/settings/installations> → *Railway* → *Configure* →
+      dodaj `crmnoxso`. Bez tego push nie wdraża się sam i każdą zmianę trzeba
+      wypychać z dysku (`railway deployment up`).
+- [ ] **Wymiana tokenu Railwaya** użytego przy zakładaniu projektu.
+- [ ] **Wyczyszczenie danych testowych z produkcji** — leży tam kilka rozmów
+      i klientów założonych podczas weryfikacji.
+- [ ] **Import bazy klientów na produkcji** przez `/import`, tym samym arkuszem
+      co lokalnie.
+- [ ] **Mocniejsze hasło produkcyjne przed importem.** Dziś to `Milosz/Milosz`,
+      świadomie — dopóki baza jest pusta, stawką jest kilka groszy na kluczu AI.
+      Po wgraniu arkusza stawką stają się nazwiska, telefony i NIP-y 1923
+      gospodarstw, a login też brzmi `Milosz`.
+- [ ] Etap 7 — SMS. Wymaga `SMSPLANET_TOKEN`; pole nadawcy `NOXSO` warto zgłosić
+      wcześniej, akceptacja trwa 1–3 dni robocze.
+- [ ] Etap 8 — `/settings`, eksport CSV, dopięcie wdrożenia.
+
+### Odstępstwa od specyfikacji, świadome
+
+| Specyfikacja | Jak jest | Dlaczego |
+|---|---|---|
+| PostgreSQL 16 | 17 | 16 zniknął z winget; Railway też daje 17 |
+| FullCalendar z CDN | plik w `static/js` | sieć blokująca PyPI zablokuje i CDN, a kalendarz bez biblioteki to pusty prostokąt |
+| migracje w kroku `release` | w komendzie startowej | Railway czyta z `Procfile` wyłącznie linię `web:` |
+| scalanie po NIP-ie i telefonie | tylko po akronimie | 34 NIP-y i 58 numerów w bazie źródłowej należy do odrębnych gospodarstw |
 
 ---
 
