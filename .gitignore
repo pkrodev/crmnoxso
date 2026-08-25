@@ -9,6 +9,9 @@ __pycache__/
 .coverage
 htmlcov/
 
+# Zmienne przygotowane do wklejenia na Railway (zawieraja sekrety)
+railway-zmienne.txt
+
 # Konfiguracja lokalna — NIGDY nie commitujemy sekretów
 .env
 .env.local
