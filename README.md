@@ -454,8 +454,17 @@ się realnie osiągalny z internetu.
    SMS-owe (`SMSPLANET_TOKEN`, `SMSPLANET_SIGNATURE_KEY`, `SMS_SENDER_NAME`)
    dołożysz przy etapie 7 — bez nich aplikacja działa, tylko kampanie nie ruszą.
 
-4. **Wygeneruj domenę**: *Settings* → *Networking* → *Generate Domain*.
-5. **Healthcheck** (opcjonalnie, ale warto): *Settings* → *Deploy* →
+4. **Daj aplikacji Railway dostęp do repozytorium** — to nie dzieje się samo.
+   Połączenie konta GitHub z Railwayem **nie wystarcza**: aplikacja GitHuba musi
+   mieć dostęp do tego konkretnego repozytorium. Bez tego usługa powstanie,
+   ale push nie wywoła wdrożenia, a próba założenia wyzwalacza kończy się
+   komunikatem *„no one in the project has access to it"*.
+
+   <https://github.com/settings/installations> → **Railway** → *Configure* →
+   *Repository access* → dodaj `crmnoxso` (albo *All repositories*).
+
+5. **Wygeneruj domenę**: *Settings* → *Networking* → *Generate Domain*.
+6. **Healthcheck** (opcjonalnie, ale warto): *Settings* → *Deploy* →
    *Healthcheck Path* → `/api/healthz`.
 
 Migracje odpalają się **w komendzie startowej**, przed Gunicornem, więc pierwszy
