@@ -178,6 +178,45 @@
     @apply flash bg-amber-50 border-amber-200 text-amber-900;
   }
 
+  /* --- Kalendarz ---------------------------------------------------------
+     FullCalendar rysuje własne kafelki, więc kolory podajemy mu klasami
+     z serwera (`css_classes` w app/services/calendar.py). Trzy stany:
+
+       .ev-ai            propozycja z rozmowy — przerywana obwódka na jasnym tle,
+       .ev-ai-confirmed  potwierdzony termin z rozmowy — pełny bursztyn,
+       .ev-manual        wpis zrobiony ręcznie.
+
+     Nigdzie białego tekstu na bursztynie (kontrast 1,84:1) — na bursztynie
+     zawsze czarny. */
+  .fc .fc-event.ev-ai {
+    @apply bg-amber-50 border border-dashed border-amber-600 text-ink-900;
+  }
+  .fc .fc-event.ev-ai-confirmed {
+    @apply bg-amber-500 border-amber-600 text-ink-950;
+  }
+  .fc .fc-event.ev-manual {
+    @apply bg-ink-900 border-ink-900 text-white;
+  }
+  .fc .fc-event {
+    @apply cursor-pointer text-xs;
+  }
+  /* Siatka w tonacji reszty aplikacji, bez domyślnych błękitów FullCalendara. */
+  .fc .fc-day-today {
+    @apply bg-amber-50/60;
+  }
+  .fc .fc-button-primary {
+    @apply bg-white border-ink-200 text-ink-900 capitalize;
+  }
+  .fc .fc-button-primary:not(:disabled):hover {
+    @apply bg-ink-50 border-ink-200 text-ink-900;
+  }
+  .fc .fc-button-primary:not(:disabled).fc-button-active {
+    @apply bg-amber-500 border-amber-600 text-ink-950;
+  }
+  .fc .fc-toolbar-title {
+    @apply text-base font-semibold text-ink-900;
+  }
+
   /* --- Wskaźnik pracy HTMX ----------------------------------------------- */
   .htmx-indicator {
     @apply opacity-0 transition-opacity;

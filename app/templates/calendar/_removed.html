@@ -1,0 +1,11 @@
+{# Potwierdzenie usunięcia. Siatka kalendarza odświeża się nagłówkiem HX-Trigger. #}
+<div class="card">
+  <div class="card-body py-6 text-center">
+    <p class="text-sm text-ink-900">Usunięto: {{ title }}</p>
+    <button type="button" class="link text-xs mt-2"
+            hx-get="{{ url_for('calendar.empty') }}"
+            hx-target="#panel-wydarzenia" hx-swap="innerHTML">
+      zamknij
+    </button>
+  </div>
+</div>

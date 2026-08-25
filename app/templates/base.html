@@ -92,5 +92,9 @@
   </main>
 
 </div>
+
+{# Skrypty potrzebne tylko na jednym ekranie (FullCalendar) ładujemy tutaj,
+   a nie w <head> — reszta aplikacji nie ma powodu pobierać 280 kB. #}
+{% block scripts %}{% endblock %}
 </body>
 </html>

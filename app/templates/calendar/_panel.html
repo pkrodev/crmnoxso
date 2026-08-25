@@ -1,0 +1,88 @@
+{#
+  Panel klikniętego wydarzenia. Wraca z serwera jako gotowy HTML — przyciski
+  Potwierdź / Edytuj / Usuń podmieniają ten sam panel kolejnym fragmentem.
+#}
+{% set is_ai = event.source.value == 'AI' %}
+
+<div class="card {{ 'border-dashed border-amber-600 bg-amber-50' if is_ai and not event.confirmed }}">
+
+  <div class="card-header">
+    <span class="section-title">Wydarzenie</span>
+    {% if is_ai %}
+      {% if event.confirmed %}
+        <span class="badge-success">potwierdzone</span>
+      {% else %}
+        <span class="badge-warning">propozycja z rozmowy</span>
+      {% endif %}
+    {% else %}
+      <span class="badge-neutral">wpis własny</span>
+    {% endif %}
+  </div>
+
+  <div class="card-body py-3">
+    <p class="font-medium text-ink-900">{{ event.title }}</p>
+
+    <p class="text-sm text-ink-700 mt-1">
+      {{ event.starts_at | date_long_pl }}
+      {%- if not event.all_day %}, godz. {{ event.starts_at | datetime_pl('%H:%M') }}
+      {%- else %}, cały dzień{% endif %}
+    </p>
+
+    {% if is_ai and event.confidence %}
+      <p class="text-xs text-ink-500 mt-0.5">
+        Model ocenił termin jako: {{ confidence_labels.get(event.confidence, event.confidence) }}
+      </p>
+    {% endif %}
+
+    {% if event.client %}
+      <p class="text-sm mt-2">
+        <a class="link" href="{{ url_for('clients.detail', client_id=event.client.id) }}">
+          {{ event.client.name }}
+        </a>
+      </p>
+    {% else %}
+      <p class="text-xs text-ink-500 mt-2">Bez przypisanego klienta.</p>
+    {% endif %}
+
+    {% if event.description %}
+      <p class="text-sm text-ink-700 mt-2 whitespace-pre-line">{{ event.description }}</p>
+    {% endif %}
+
+    {# Fragment rozmowy, z której powstał termin — kontekst wprost pod ręką,
+       zamiast szukania po ekranie rozmów. #}
+    {% if excerpt %}
+      <div class="mt-3 pt-3 border-t border-ink-200">
+        <p class="section-title mb-1">Z rozmowy</p>
+        <p class="text-sm text-ink-700 whitespace-pre-line">{{ excerpt }}</p>
+        {% if event.transcript_id %}
+          <a class="link text-xs"
+             href="{{ url_for('transcripts.detail', transcript_id=event.transcript_id) }}">
+            otwórz całą rozmowę
+          </a>
+        {% endif %}
+      </div>
+    {% endif %}
+
+    <div class="flex flex-wrap items-center gap-2 mt-4">
+      {% if is_ai and not event.confirmed %}
+        <button type="button" class="btn-primary"
+                hx-post="{{ url_for('calendar.confirm', event_id=event.id) }}"
+                hx-target="#panel-wydarzenia" hx-swap="innerHTML">
+          Potwierdź
+        </button>
+      {% endif %}
+
+      <button type="button" class="btn-secondary"
+              hx-get="{{ url_for('calendar.edit', event_id=event.id) }}"
+              hx-target="#panel-wydarzenia" hx-swap="innerHTML">
+        Edytuj
+      </button>
+
+      <button type="button" class="btn-ghost ml-auto"
+              hx-get="{{ url_for('calendar.delete_confirm', event_id=event.id) }}"
+              hx-target="#panel-wydarzenia" hx-swap="innerHTML">
+        Usuń
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% block title %}Kalendarz · {{ app_name }}{% endblock %}
+{% block heading %}Kalendarz{% endblock %}
+
+{% block subheading %}
+  {% if waiting %}
+    <p class="text-xs text-orange-800 mt-0.5">
+      {{ waiting }} {{ plural_pl(waiting, 'termin z rozmowy czeka', 'terminy z rozmów czekają', 'terminów z rozmów czeka') }}
+      na potwierdzenie
+    </p>
+  {% else %}
+    <p class="text-xs text-ink-500 mt-0.5">Wszystkie terminy potwierdzone.</p>
+  {% endif %}
+{% endblock %}
+
+{% block actions %}
+  <button type="button" class="btn-primary"
+          hx-get="{{ url_for('calendar.create') }}"
+          hx-target="#panel-wydarzenia"
+          hx-swap="innerHTML">
+    Nowe wydarzenie
+  </button>
+{% endblock %}
+
+{% block content %}
+{# `min-w-0` na obu kolumnach: siatka kalendarza ma swoją szerokość własną
+   i bez tego rozpychałaby stronę w bok. #}
+<div class="grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] items-start">
+
+  <div class="card min-w-0">
+    <div class="card-body">
+      {#
+        Konfiguracja idzie atrybutami data-*, nie w skrypcie — dzięki temu
+        adresy buduje `url_for`, a nie ręcznie sklejony napis w JavaScripcie.
+      #}
+      <div id="kalendarz"
+           data-feed="{{ url_for('calendar.feed') }}"
+           data-panel="#panel-wydarzenia"
+           data-event-url="{{ url_for('calendar.panel', event_id=0) }}"
+           data-new-url="{{ url_for('calendar.create') }}"></div>
+    </div>
+  </div>
+
+  <div id="panel-wydarzenia" class="min-w-0">
+    {% include 'calendar/_empty.html' %}
+  </div>
+
+</div>
+
+<div class="card mt-4">
+  <div class="card-body py-3 text-xs text-ink-700 flex flex-wrap items-center gap-4">
+    <span class="section-title">Legenda</span>
+    <span class="inline-flex items-center gap-1.5">
+      <span class="w-4 h-3 rounded-sm bg-amber-50 border border-dashed border-amber-600"></span>
+      propozycja z rozmowy
+    </span>
+    <span class="inline-flex items-center gap-1.5">
+      <span class="w-4 h-3 rounded-sm bg-amber-500"></span>
+      potwierdzony termin z rozmowy
+    </span>
+    <span class="inline-flex items-center gap-1.5">
+      <span class="w-4 h-3 rounded-sm bg-ink-900"></span>
+      wpis własny
+    </span>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+  <script src="{{ url_for('static', filename='js/fullcalendar.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/kalendarz.js') }}"></script>
+{% endblock %}

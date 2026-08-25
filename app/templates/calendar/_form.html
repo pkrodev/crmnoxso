@@ -1,0 +1,85 @@
+{#
+  Formularz wydarzenia — ten sam do dodawania i do poprawiania. Gdy `event`
+  jest puste, dodajemy nowe; inaczej edytujemy istniejące.
+
+  Godzina jest opcjonalna: pusta oznacza wydarzenie całodniowe. Tak wygląda
+  większość ustaleń z rozmów („przyjadę w czwartek"), więc wymuszanie godziny
+  kazałoby ją zmyślać.
+#}
+{% set editing = event is not none %}
+
+<div class="card">
+  <div class="card-header">
+    <span class="section-title">{{ 'Edycja wydarzenia' if editing else 'Nowe wydarzenie' }}</span>
+  </div>
+
+  <form class="card-body py-3 space-y-3"
+        hx-post="{{ url_for('calendar.save', event_id=event.id) if editing else url_for('calendar.create') }}"
+        hx-target="#panel-wydarzenia" hx-swap="innerHTML">
+
+    <div>
+      <label class="label" for="pole-tytul">Tytuł</label>
+      <input id="pole-tytul" class="input" name="title" maxlength="300" autocomplete="off"
+             value="{{ event.title if editing else '' }}" placeholder="np. Pokaz siewnika u Kowalskiego">
+    </div>
+
+    <div class="grid grid-cols-2 gap-3">
+      <div>
+        <label class="label" for="pole-data">Data</label>
+        <input id="pole-data" class="input" type="date" name="day"
+               value="{{ (event.starts_at | to_local_date) if editing else (day or '') }}">
+      </div>
+      <div>
+        <label class="label" for="pole-godzina">Godzina</label>
+        <input id="pole-godzina" class="input" type="time" name="time"
+               value="{{ (event.starts_at | datetime_pl('%H:%M')) if editing and not event.all_day else '' }}">
+        <p class="text-xs text-ink-500 mt-1">Puste = cały dzień</p>
+      </div>
+    </div>
+
+    <div>
+      <label class="label" for="pole-klient">Klient</label>
+      <select id="pole-klient" class="input" name="client_id">
+        <option value="">bez przypisania</option>
+        {% for client in clients %}
+          <option value="{{ client.id }}"
+                  {{ 'selected' if editing and event.client_id == client.id }}>
+            {{ client.name }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div>
+      <label class="label" for="pole-opis">Opis</label>
+      <textarea id="pole-opis" class="input" name="description" rows="3"
+                placeholder="szczegóły (opcjonalnie)">{{ event.description if editing and event.description else '' }}</textarea>
+    </div>
+
+    {% if error %}<p class="field-error">{{ error }}</p>{% endif %}
+
+    {% if editing and event.source.value == 'AI' and not event.confirmed %}
+      <p class="text-xs text-ink-500">
+        Zapis oznacza termin jako potwierdzony — poprawiasz go własną ręką,
+        więc przestaje być propozycją modelu.
+      </p>
+    {% endif %}
+
+    <div class="flex items-center gap-2 pt-1">
+      <button type="submit" class="btn-primary">Zapisz</button>
+      {% if editing %}
+        <button type="button" class="btn-secondary"
+                hx-get="{{ url_for('calendar.panel', event_id=event.id) }}"
+                hx-target="#panel-wydarzenia" hx-swap="innerHTML">
+          Anuluj
+        </button>
+      {% else %}
+        <button type="button" class="btn-secondary"
+                hx-get="{{ url_for('calendar.empty') }}"
+                hx-target="#panel-wydarzenia" hx-swap="innerHTML">
+          Anuluj
+        </button>
+      {% endif %}
+    </div>
+  </form>
+</div>

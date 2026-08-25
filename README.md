@@ -3,9 +3,9 @@
 Jednoosobowy CRM dla firmy NOXSO (branża rolnicza, Wielkopolska).
 Specyfikacja projektu: [`CLAUDE.md`](CLAUDE.md).
 
-Stan prac: **etapy 1–5** (fundament, import z normalizacją, ekran klientów,
-transkrypcje rozmów, analiza AI), uruchomione i sprawdzone na prawdziwej bazie
-1923 kontrahentów. Etapy 6–8 — kalendarz, SMS, ustawienia — przed nami.
+Stan prac: **etapy 1–6** (fundament, import z normalizacją, ekran klientów,
+transkrypcje rozmów, analiza AI, kalendarz), uruchomione i sprawdzone na
+prawdziwej bazie 1923 kontrahentów. Etapy 7–8 — SMS i ustawienia — przed nami.
 
 ---
 
@@ -182,11 +182,11 @@ Authorization: Bearer <INGEST_TOKEN>
 Dwa warianty żądania:
 
 ```bash
-# plik .txt
-curl -X POST https://.../api/ingest/transcript      -H "Authorization: Bearer $INGEST_TOKEN"      -F "file=@rozmowa.txt" -F "phone=601 092 947" -F "date=14.03.2026"
+# plik .txt (multipart)
+curl -X POST https://.../api/ingest/transcript -H "Authorization: Bearer $INGEST_TOKEN" -F "file=@rozmowa.txt" -F "phone=601 092 947" -F "date=14.03.2026"
 
 # JSON
-curl -X POST https://.../api/ingest/transcript      -H "Authorization: Bearer $INGEST_TOKEN"      -H "Content-Type: application/json"      -d '{"text": "...", "phone": "601092947", "date": "2026-03-14"}'
+curl -X POST https://.../api/ingest/transcript -H "Authorization: Bearer $INGEST_TOKEN" -H "Content-Type: application/json" -d '{"text": "...", "phone": "601092947", "date": "2026-03-14"}'
 ```
 
 Odpowiedź przychodzi **natychmiast** (`202`), z numerem rozmowy i informacją,
@@ -305,6 +305,46 @@ Zużycie tokenów zapisujemy przy każdej rozmowie; suma miesięczna trafi do
 
 ---
 
+## Kalendarz
+
+Ekran `/calendar` — FullCalendar 6 w widokach miesiąca, tygodnia i agendy,
+zasilany endpointem JSON. Kliknięcie w wydarzenie otwiera panel obok
+(fragment HTML przez HTMX) z przyciskami Potwierdź / Edytuj / Usuń; kliknięcie
+w pusty dzień otwiera formularz nowego wpisu z tą datą.
+
+**Trzy stany wydarzenia, trzy wyglądy** — wszystkie w palecie marki:
+
+| Wygląd | Znaczenie |
+|---|---|
+| przerywana obwódka `amber-600` na tle `amber-50` | propozycja z rozmowy, niepotwierdzona |
+| pełne tło `amber-500`, czarny tekst | potwierdzony termin z rozmowy |
+| tło `ink-900`, biały tekst | wpis zrobiony ręcznie |
+
+Rzeczy warte zapamiętania:
+
+- **Wydarzenie z AI to propozycja, nie fakt.** Potwierdzenie jest jedynym
+  sposobem, w jaki termin z modelu staje się ustaleniem. Poprawienie go ręcznie
+  też liczy się jako potwierdzenie — użytkownik właśnie wpisał własną wartość,
+  więc udawanie, że decyzji nie było, byłoby nieuczciwe.
+- **Czas polski na wejściu i wyjściu, UTC w bazie.** Kalendarz dostaje daty
+  z jawnym przesunięciem (`2026-09-01T14:00:00+02:00`), więc niczego nie zgaduje,
+  a przejście na czas zimowy nie przesuwa terminów. Testy pilnują obu przesunięć.
+- **Pusta godzina znaczy „cały dzień".** Większość ustaleń z rozmów brzmi
+  „przyjadę w czwartek", więc wymuszanie godziny kazałoby ją zmyślać.
+- **Usunięcie pyta o potwierdzenie** fragmentem z serwera, nie okienkiem
+  `confirm()`, a ślad zostaje na osi czasu klienta.
+- Panel wydarzenia pokazuje **fragment rozmowy, z której termin powstał** —
+  kontekst pod ręką, bez szukania po ekranie rozmów.
+
+**Odstępstwo od specyfikacji:** FullCalendar leży w `static/js`, nie jest
+ciągnięty z CDN. Powód jest ten sam, dla którego font Inter hostujemy lokalnie,
+a HTMX i Alpine leżą w repozytorium: sieć, w której instalacja z PyPI zrywała
+połączenie, potrafi zablokować także CDN — a kalendarz bez biblioteki to pusty
+prostokąt. Plik waży 282 kB i ładuje się **tylko na tym jednym ekranie**.
+Powrót na CDN to podmiana jednej linii w `calendar/index.html`.
+
+---
+
 ## Testy
 
 ```powershell
@@ -396,7 +436,8 @@ app/
 ├── filters.py           filtry Jinja (daty w Europe/Warsaw, telefony, NIP)
 ├── tasks.py             zadania APSchedulera
 ├── models/              modele SQLAlchemy 2.0
-├── blueprints/          auth, dashboard, clients, imports, transcripts, api
+├── blueprints/          auth, dashboard, clients, imports, transcripts,
+│                        calendar, api
 ├── services/
 │   ├── normalize.py     telefony, NIP, miasta, kody pocztowe
 │   ├── importer.py      odczyt arkusza, deduplikacja, zapis
@@ -405,6 +446,7 @@ app/
 │   ├── transcripts.py   lista rozmów, zakładki, liczniki
 │   ├── ai.py            prompt, dostawca modelu, walidacja odpowiedzi
 │   ├── analysis.py      kolejka analizy, wydarzenia, ponawianie
+│   ├── calendar.py      wydarzenia, strefy czasowe, potwierdzanie
 │   └── paging.py        stronicowanie wspólne dla list
 ├── templates/
 └── static/

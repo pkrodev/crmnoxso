@@ -85,6 +85,16 @@ def relative_pl(value: datetime | None) -> str:
     return datetime_pl(value, "%d.%m.%Y")
 
 
+def to_local_date(value: datetime | None) -> str:
+    """Data w formacie, którego oczekuje ``<input type="date">``, w czasie polskim.
+
+    Pole formularza przyjmuje wyłącznie ``RRRR-MM-DD``. Wstawienie tam daty
+    liczonej po UTC przesunęłoby wieczorne terminy o dobę.
+    """
+    local = to_local(value)
+    return local.date().isoformat() if local else ""
+
+
 def phone_pl(e164: str | None) -> str:
     """+48601092947 → 601 092 947 (polskie numery), reszta bez zmian."""
     if not e164:
@@ -122,6 +132,7 @@ def register_filters(app) -> None:
     app.jinja_env.filters["date_pl"] = date_pl
     app.jinja_env.filters["date_long_pl"] = date_long_pl
     app.jinja_env.filters["relative_pl"] = relative_pl
+    app.jinja_env.filters["to_local_date"] = to_local_date
     app.jinja_env.filters["phone_pl"] = phone_pl
     app.jinja_env.filters["nip_pl"] = nip_pl
     app.jinja_env.globals["plural_pl"] = plural_pl

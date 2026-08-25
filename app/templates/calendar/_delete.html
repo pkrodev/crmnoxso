@@ -1,0 +1,32 @@
+{#
+  Pytanie przed usunięciem. Fragment z serwera zamiast okienka `confirm()`
+  z JavaScriptu — spójnie z resztą aplikacji i bez blokowania przeglądarki.
+#}
+<div class="card border-danger">
+  <div class="card-header">
+    <span class="section-title text-danger">Usunąć wydarzenie?</span>
+  </div>
+  <div class="card-body py-3">
+    <p class="text-sm text-ink-900">{{ event.title }}</p>
+    <p class="text-sm text-ink-700 mt-0.5">
+      {{ event.starts_at | date_long_pl }}
+      {%- if not event.all_day %}, godz. {{ event.starts_at | datetime_pl('%H:%M') }}{% endif %}
+    </p>
+    <p class="text-xs text-ink-500 mt-2">
+      Tego nie da się cofnąć. Ślad o usunięciu zostanie na osi czasu klienta.
+    </p>
+
+    <div class="flex items-center gap-2 mt-4">
+      <button type="button" class="btn-danger"
+              hx-post="{{ url_for('calendar.delete', event_id=event.id) }}"
+              hx-target="#panel-wydarzenia" hx-swap="innerHTML">
+        Tak, usuń
+      </button>
+      <button type="button" class="btn-secondary"
+              hx-get="{{ url_for('calendar.panel', event_id=event.id) }}"
+              hx-target="#panel-wydarzenia" hx-swap="innerHTML">
+        Anuluj
+      </button>
+    </div>
+  </div>
+</div>

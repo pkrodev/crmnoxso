@@ -58,13 +58,22 @@ def _init_extensions(app: Flask) -> None:
 
 
 def _register_blueprints(app: Flask) -> None:
-    from app.blueprints import api, auth, clients, dashboard, imports, transcripts
+    from app.blueprints import (
+        api,
+        auth,
+        calendar,
+        clients,
+        dashboard,
+        imports,
+        transcripts,
+    )
 
     app.register_blueprint(auth.bp)
     app.register_blueprint(dashboard.bp)
     app.register_blueprint(clients.bp, url_prefix="/clients")
     app.register_blueprint(imports.bp, url_prefix="/import")
     app.register_blueprint(transcripts.bp, url_prefix="/transcripts")
+    app.register_blueprint(calendar.bp, url_prefix="/calendar")
     app.register_blueprint(api.bp, url_prefix="/api")
 
     # Endpointy maszynowe nie mają formularza ani ciasteczka sesji, którym dałoby

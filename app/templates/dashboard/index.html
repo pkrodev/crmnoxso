@@ -11,7 +11,7 @@
     ('Klienci ogółem', total_clients, none, url_for('clients.index')),
     ('Nowi w tym miesiącu', new_this_month, none, none),
     ('Rozmowy do przejrzenia', to_review, 'warning', url_for('transcripts.index', status='uwaga')),
-    ('Wydarzenia w 7 dni', upcoming_count, none, none)
+    ('Wydarzenia w 7 dni', upcoming_count, none, url_for('calendar.index'))
   ] %}
   {% for label, value, tone, href in tiles %}
     {% set body %}
@@ -77,10 +77,13 @@
           <ul class="space-y-2">
             {% for event in upcoming %}
               <li class="flex gap-2 text-sm">
-                <span class="text-ink-500 whitespace-nowrap">{{ event.starts_at | datetime_pl('%d.%m %H:%M') }}</span>
-                <span class="flex-1">{{ event.title }}</span>
+                <span class="text-ink-500 whitespace-nowrap">
+                  {%- if event.all_day %}{{ event.starts_at | datetime_pl('%d.%m') }}
+                  {%- else %}{{ event.starts_at | datetime_pl('%d.%m %H:%M') }}{% endif %}
+                </span>
+                <a class="flex-1 hover:text-amber-800" href="{{ url_for('calendar.index') }}">{{ event.title }}</a>
                 {% if event.source.value == 'AI' and not event.confirmed %}
-                  <span class="badge-soft">AI</span>
+                  <span class="badge-warning">do potwierdzenia</span>
                 {% endif %}
               </li>
             {% endfor %}
